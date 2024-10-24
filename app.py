@@ -93,12 +93,6 @@ class App:
             self.notebook.add(self.staff_tab, text="Staff")
             self.init_staff_functions()
 
-        # # Initialize customer functionalities
-        # self.init_customer_functions()
-        
-        # # Initialize staff functionalities
-        # self.init_staff_functions()
-
     def init_customer_functions(self):
         """Initialize customer functionalities."""
         # Place Order Section
