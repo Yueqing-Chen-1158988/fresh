@@ -2,6 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models.base import Base
 from models.customer import Customer, CorporateCustomer
+from models.staff import Staff
 from models.vegetable_premadeBox import Vegetable, PremadeBox 
 from models.order import Order
 from models.order_line import OrderLine

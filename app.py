@@ -1,12 +1,15 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from sqlalchemy import desc, func
 from sqlalchemy.orm import sessionmaker
 from database_setup import get_session
 from models.customer import Customer, CorporateCustomer
 from models.order import Order
 from models.order_line import OrderLine
 from models.payment import Payment
+from models.staff import Staff
 from models.vegetable_premadeBox import Vegetable, PremadeBox
+from werkzeug.security import check_password_hash
 
 class App:
     def __init__(self, root):
@@ -15,6 +18,61 @@ class App:
         self.root.geometry("800x800")
 
         self.session = get_session()  # Initialize database session
+
+        # Initialize login screen
+        self.show_login()
+
+    def show_login(self):
+        """Display the login screen."""
+        self.login_frame = ttk.Frame(self.root)
+        self.login_frame.pack(fill=tk.BOTH, expand=True)
+
+        ttk.Label(self.login_frame, text="Login", font=("Arial", 24)).pack(pady=20)
+
+        ttk.Label(self.login_frame, text="Username:").pack(pady=5)
+        self.username_entry = ttk.Entry(self.login_frame)
+        self.username_entry.pack(pady=5)
+
+        ttk.Label(self.login_frame, text="Password:").pack(pady=5)
+        self.password_entry = ttk.Entry(self.login_frame, show="*")
+        self.password_entry.pack(pady=5)
+
+        self.login_button = ttk.Button(self.login_frame, text="Login", command=self.authenticate_user)
+        self.login_button.pack(pady=20)
+
+    def authenticate_user(self):
+        """Authenticate the user based on the username and password."""
+        username = self.username_entry.get()
+        password = self.password_entry.get()
+
+        if not username or not password:
+            messagebox.showerror("Error", "Please enter both username and password.")
+            return
+
+        # Check if user is a Customer
+        customer = self.session.query(Customer).filter_by(username=username).first()
+        
+        if customer and check_password_hash(customer.password_hash, password):
+            self.user_role = "customer"
+            self.customer_id = customer.customer_id
+            self.show_main_interface()
+            return
+
+        # Check if user is Staff
+        staff = self.session.query(Staff).filter_by(username=username).first()
+        
+        if staff and check_password_hash(staff.password_hash, password):
+            self.user_role = "staff"
+            self.staff_id = staff.staff_id
+            self.show_main_interface()
+            return
+
+        # Invalid credentials
+        messagebox.showerror("Error", "Invalid username or password.")
+
+    def show_main_interface(self):
+        """Display the main interface based on the user role after successful login."""
+        self.login_frame.pack_forget()  # Hide login frame
 
         # Create a main frame
         self.main_frame = ttk.Frame(self.root)
@@ -28,14 +86,18 @@ class App:
         self.customer_tab = ttk.Frame(self.notebook)
         self.staff_tab = ttk.Frame(self.notebook)
 
-        self.notebook.add(self.customer_tab, text="Customer")
-        self.notebook.add(self.staff_tab, text="Staff")
+        if self.user_role == "customer":
+            self.notebook.add(self.customer_tab, text="Customer")
+            self.init_customer_functions()
+        elif self.user_role == "staff":
+            self.notebook.add(self.staff_tab, text="Staff")
+            self.init_staff_functions()
 
-        # Initialize customer functionalities
-        self.init_customer_functions()
+        # # Initialize customer functionalities
+        # self.init_customer_functions()
         
-        # Initialize staff functionalities
-        self.init_staff_functions()
+        # # Initialize staff functionalities
+        # self.init_staff_functions()
 
     def init_customer_functions(self):
         """Initialize customer functionalities."""
@@ -43,7 +105,7 @@ class App:
         ttk.Label(self.customer_tab, text="Place an Order", font=("Arial", 16)).pack(pady=10)
 
         self.order_frame = ttk.LabelFrame(self.customer_tab, text="Order Form")
-        self.order_frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+        self.order_frame.pack(padx=10, pady=5, fill=tk.BOTH, expand=True)
 
         # Vegetable Selection Section
         ttk.Label(self.order_frame, text="Select Vegetable:").grid(row=0, column=0, padx=5, pady=5)
@@ -100,18 +162,136 @@ class App:
         # Staff Order Section
         ttk.Label(self.staff_tab, text="Process Customer Orders", font=("Arial", 16)).pack(pady=10)
 
-        self.staff_order_frame = ttk.LabelFrame(self.staff_tab, text="Order Processing")
-        self.staff_order_frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+        # Customer Selection
+        ttk.Label(self.staff_tab, text="Enter Customer Email:").pack(padx=5, pady=5)
+        self.customer_email_entry = ttk.Entry(self.staff_tab)
+        self.customer_email_entry.pack(padx=5, pady=5)
 
-        # Order Selection for Staff
-        ttk.Label(self.staff_order_frame, text="Select Order ID:").grid(row=0, column=0, padx=5, pady=5)
-        self.staff_order_combobox = ttk.Combobox(self.staff_order_frame, values=self.get_order_ids())
-        self.staff_order_combobox.grid(row=0, column=1, padx=5, pady=5)
+        # Vegetable Selection
+        ttk.Label(self.staff_tab, text="Select Vegetable:").pack(padx=5, pady=5)
+        self.staff_vegetable_combobox = ttk.Combobox(self.staff_tab, values=self.get_vegetable_names())
+        self.staff_vegetable_combobox.pack(padx=5, pady=5)
 
-        # Update Order Status Button
-        self.update_order_status_button = ttk.Button(self.staff_order_frame, text="Update Order Status", command=self.update_order_status)
-        self.update_order_status_button.grid(row=1, columnspan=2, pady=10)
+        # Quantity Entry
+        ttk.Label(self.staff_tab, text="Quantity:").pack(padx=5, pady=5)
+        self.staff_quantity_entry = ttk.Entry(self.staff_tab)
+        self.staff_quantity_entry.pack(padx=5, pady=5)
 
+        # Submit Order Button
+        self.staff_submit_order_button = ttk.Button(self.staff_tab, text="Submit Order", command=self.submit_staff_order)
+        self.staff_submit_order_button.pack(pady=10)
+
+        # Update Order Status Section
+        ttk.Label(self.staff_tab, text="Update Order Status", font=("Arial", 16)).pack(pady=10)
+        ttk.Label(self.staff_tab, text="Enter Order ID:").pack(padx=5, pady=5)
+        self.order_id_entry = ttk.Entry(self.staff_tab)
+        self.order_id_entry.pack(padx=5, pady=5)
+
+        ttk.Label(self.staff_tab, text="Select New Status:").pack(padx=5, pady=5)
+        self.status_combobox = ttk.Combobox(self.staff_tab, values=["Pending", "Shipped", "Delivered", "Canceled"])
+        self.status_combobox.pack(padx=5, pady=5)
+
+        # Update Order Button
+        self.update_status_button = ttk.Button(self.staff_tab, text="Update Status", command=self.update_order_status)
+        self.update_status_button.pack(pady=10)
+
+        # Customer Lookup Section
+        ttk.Label(self.staff_tab, text="Customer Lookup", font=("Arial", 16)).pack(pady=10)
+        ttk.Label(self.staff_tab, text="Enter Customer Email:").pack(padx=5, pady=5)
+        self.customer_search_entry = ttk.Entry(self.staff_tab)
+        self.customer_search_entry.pack(padx=5, pady=5)
+
+        self.customer_details_label = ttk.Label(self.staff_tab, text="")
+        self.customer_details_label.pack(padx=5, pady=5)
+
+        # Search Button
+        self.search_customer_button = ttk.Button(self.staff_tab, text="Search", command=self.view_customer_details)
+        self.search_customer_button.pack(pady=10)
+
+        # Report Section
+        ttk.Label(self.staff_tab, text="Generate Reports", font=("Arial", 16)).pack(pady=10)
+        self.report_combobox = ttk.Combobox(self.staff_tab, values=["Sales", "Customer List", "Item Popularity"])
+        self.report_combobox.pack(padx=5, pady=5)
+
+        self.generate_report_button = ttk.Button(self.staff_tab, text="Generate Report", command=self.generate_report)
+        self.generate_report_button.pack(pady=10)
+
+    def submit_staff_order(self):
+        """Submit a new order on behalf of a customer by staff."""
+        email = self.customer_email_entry.get()
+        vegetable_name = self.staff_vegetable_combobox.get()
+        quantity = self.staff_quantity_entry.get()
+
+        customer = self.session.query(Customer).filter_by(email=email).first()
+        if not customer:
+            messagebox.showerror("Error", "Customer not found.")
+            return
+
+        vegetable = self.session.query(Vegetable).filter_by(name=vegetable_name).first()
+        if not vegetable:
+            messagebox.showerror("Error", "Vegetable not found.")
+            return
+
+        # Create a new order for the customer
+        new_order = Order(customer_id=customer.customer_id, order_type='vegetable', delivery_option='collect')
+        self.session.add(new_order)
+        self.session.commit()
+
+        # Add order line
+        order_line = OrderLine(order_id=new_order.order_id, item_name=vegetable.name, quantity=int(quantity), price=vegetable.price_per_unit)
+        self.session.add(order_line)
+        self.session.commit()
+
+        messagebox.showinfo("Success", f"Order for {quantity} kg of {vegetable_name} placed for {email}.")
+
+
+    def update_order_status(self):
+        """Update the status of an existing order."""
+        order_id = self.order_id_entry.get()
+        new_status = self.status_combobox.get()
+
+        order = self.session.query(Order).filter_by(order_id=order_id).first()
+        if not order:
+            messagebox.showerror("Error", "Order not found.")
+            return
+
+        order.status = new_status
+        self.session.commit()
+        messagebox.showinfo("Success", f"Order {order_id} status updated to {new_status}.")
+
+    def view_customer_details(self):
+        """View customer details and order history."""
+        search_email = self.customer_search_entry.get()
+
+        customer = self.session.query(Customer).filter_by(email=search_email).first()
+        if customer:
+            self.customer_details_label.config(text=f"Name: {customer.name}, Email: {customer.email}, Balance: {customer.balance}")
+            self.load_customer_order_history(customer.customer_id)
+        else:
+            messagebox.showerror("Error", "Customer not found.")
+
+    def generate_report(self):
+        """Generate and display reports based on the selection."""
+        report_type = self.report_combobox.get()
+        
+        if report_type == "Sales":
+            # Fetch sales data (e.g., total sales)
+            total_sales = self.session.query(func.sum(OrderLine.price * OrderLine.quantity)).scalar()
+            messagebox.showinfo("Sales Report", f"Total Sales: ${total_sales:.2f}")
+
+        elif report_type == "Customer List":
+            # Fetch customer list
+            customers = self.session.query(Customer).all()
+            customer_list = "\n".join([f"{c.name} ({c.email})" for c in customers])
+            messagebox.showinfo("Customer List", customer_list)
+
+        elif report_type == "Item Popularity":
+            # Fetch most popular items
+            popular_items = self.session.query(OrderLine.item_name, func.sum(OrderLine.quantity).label('total_quantity'))\
+                .group_by(OrderLine.item_name).order_by(desc('total_quantity')).all()
+            item_list = "\n".join([f"{item_name}: {quantity} units sold" for item_name, quantity in popular_items])
+            messagebox.showinfo("Item Popularity", item_list)
+            
     def get_vegetable_names(self):
         """Fetch vegetable names from the database."""
         vegetables = self.session.query(Vegetable).all()
@@ -204,10 +384,19 @@ class App:
         # Create a Treeview to display order history
         order_history_tree = ttk.Treeview(order_history_window, columns=("Order ID", "Item Name", "Quantity", "Price", "Total Cost"), show="headings")
         order_history_tree.heading("Order ID", text="Order ID")
+        order_history_tree.column("Order ID", width=80)
+
         order_history_tree.heading("Item Name", text="Item Name")
+        order_history_tree.column("Item Name", width=150)
+
         order_history_tree.heading("Quantity", text="Quantity")
+        order_history_tree.column("Quantity", width=80)
+
         order_history_tree.heading("Price", text="Price")
+        order_history_tree.column("Price", width=100) 
+
         order_history_tree.heading("Total Cost", text="Total Cost")
+        order_history_tree.column("Total Cost", width=120)
 
         # Add vertical scrollbar
         scrollbar = ttk.Scrollbar(order_history_window, orient=tk.VERTICAL, command=order_history_tree.yview)
@@ -249,9 +438,15 @@ class App:
 
             for line in order_lines:
                 order_history_tree.insert("", "end", values=(order.order_id, line.item_name, line.quantity, f"${line.price:.2f}", f"${total_cost:.2f}"))
+    
+    def close(self):
+        """Close the application and the session."""
+        self.session.close()
+        self.root.quit()
 
 # Initialize and run the application
 if __name__ == "__main__":
     root = tk.Tk()
     app = App(root)
+    root.protocol("WM_DELETE_WINDOW", app.close)
     root.mainloop()

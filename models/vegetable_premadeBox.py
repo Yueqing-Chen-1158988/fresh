@@ -23,7 +23,7 @@ class PremadeBox(Base):
     __tablename__ = 'premade_boxes'
     
     box_id = Column(Integer, primary_key=True, autoincrement=True)
-    size = Column(Enum('small', 'medium', 'large', name='box_size_enum'), nullable=False)
+    size = Column(Enum('Small Box', 'Medium Box', 'Large Box', name='box_size_enum'), nullable=False)
     price = Column(Float, nullable=False)
 
     def __init__(self, size, price):

@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, Enum, ForeignKey
 from sqlalchemy.orm import relationship
+from werkzeug.security import generate_password_hash
 from models.base import Base
 
 class Customer(Base):
@@ -7,14 +8,18 @@ class Customer(Base):
     
     customer_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(25), nullable=False)
-    email = Column(String(25), unique=True, nullable=False)
+    username = Column(String(25), unique=True, nullable=False)
+    password_hash = Column(String(256), nullable=False) 
+    email = Column(String(50), unique=True, nullable=False)
     balance = Column(Float, default=0.0)
     
     orders = relationship('Order', back_populates='customer')
 
-    def __init__(self, name, email, balance=0.0):
+    def __init__(self, name, username, email, password, balance=0.0):
         self.name = name
+        self.username = username
         self.email = email
+        self.password_hash = generate_password_hash(password)
         self.balance = balance
     
     def __str__(self):
@@ -28,8 +33,8 @@ class CorporateCustomer(Customer):
     credit_limit = Column(Float, nullable=False)
     discount_rate = Column(Float, nullable=False)
     
-    def __init__(self, name, email, balance, credit_limit, discount_rate):
-        super().__init__(name, email, balance)
+    def __init__(self, name, username, email, password, balance, credit_limit, discount_rate):
+        super().__init__(name, username, email, password, balance)
         self.credit_limit = credit_limit
         self.discount_rate = discount_rate
     

@@ -8,6 +8,7 @@ class Order(Base):
     
     order_id = Column(Integer, primary_key=True, autoincrement=True)
     customer_id = Column(Integer, ForeignKey('customers.customer_id'), nullable=False)
+    staff_id = Column(Integer, ForeignKey('staff.staff_id'))
     order_type = Column(Enum('vegetable', 'premade_box', name='order_type_enum'), nullable=False)
     order_date = Column(DateTime, default=datetime.now)
     status = Column(Enum('processing', 'completed', 'delivered', name='order_status_enum'), default='processing')
@@ -15,11 +16,13 @@ class Order(Base):
     delivery_fee = Column(Float, default=0.0)
     
     customer = relationship('Customer', back_populates='orders')
+    staff = relationship('Staff', back_populates='orders')
     order_lines = relationship('OrderLine', back_populates='order')
     payments = relationship('Payment', back_populates='order')
 
-    def __init__(self, customer_id, order_type, delivery_option='collect', delivery_fee=0.0, status='processing'):
+    def __init__(self, customer_id, order_type, delivery_option='collect', delivery_fee=0.0, staff_id=None, status='processing'):
         self.customer_id = customer_id
+        self.staff_id = staff_id
         self.order_type = order_type
         self.delivery_option = delivery_option
         self.delivery_fee = delivery_fee
