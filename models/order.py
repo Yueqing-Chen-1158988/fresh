@@ -30,3 +30,9 @@ class Order(Base):
     
     def __str__(self):
         return f"Order({self.order_id}, Customer: {self.customer_id}, Type: {self.order_type}, Status: {self.status})"
+
+    # Add a method to cancel orders
+    def cancel_order(self):
+        if self.status in ["Processing"]:
+            self.status = "Cancelled"
+            

@@ -1,7 +1,9 @@
 from tkinter import ttk
 import tkinter as tk
 
-from controllers.customer_controller import get_premade_box_sizes, get_vegetable_names, open_order_history, submit_order, submit_premade_box_order, update_vegetable_info
+from controllers.customer_controller import get_premade_box_sizes, get_vegetable_names, update_vegetable_info
+from controllers.order_controller import submit_order, submit_premade_box_order
+from views.order_view import OrderView
 
 class CustomerView:
     def __init__(self, root, session, customer_id, customer_tab):
@@ -39,14 +41,25 @@ class CustomerView:
         self.quantity_entry = ttk.Entry(self.order_frame)
         self.quantity_entry.grid(row=3, column=1, padx=5, pady=5)
 
+        # Add Delivery Option Section
+        ttk.Label(self.order_frame, text="Delivery Option:").grid(row=4, column=0, padx=5, pady=5)
+        self.delivery_combobox = ttk.Combobox(self.order_frame, values=["Collect", "Delivery"])
+        self.delivery_combobox.grid(row=4, column=1, padx=5, pady=5)
+        self.delivery_combobox.bind("<<ComboboxSelected>>", self.update_delivery_fee)
+
+        # Delivery Fee
+        ttk.Label(self.order_frame, text="Delivery Fee:").grid(row=5, column=0, padx=5, pady=5)
+        self.delivery_fee_label = ttk.Label(self.order_frame, text="$0.00")
+        self.delivery_fee_label.grid(row=5, column=1, padx=5, pady=5)
+
         # Submit Order Button
-        self.submit_order_button = ttk.Button(self.order_frame, text="Submit Order", command=lambda:submit_order(self.session, self.root, self.vegetable_combobox, self.quantity_entry))
-        self.submit_order_button.grid(row=4, columnspan=2, pady=10)
+        self.submit_order_button = ttk.Button(self.order_frame, text="Submit Order", command=lambda:submit_order(self.session, self.customer_id, self.vegetable_combobox, self.quantity_entry, self.delivery_combobox, self.delivery_fee_label))
+        self.submit_order_button.grid(row=6, columnspan=2, pady=10)
 
 
         # View Order History Button
-        self.view_order_history_button = ttk.Button(self.order_frame, text="View Order History", command=lambda:open_order_history(self.session, self.root))
-        self.view_order_history_button.grid(row=5, columnspan=2, pady=10)
+        self.view_order_history_button = ttk.Button(self.order_frame, text="View Order History", command=lambda:OrderView.open_order_history(self.root, self.session, self.customer_id))
+        self.view_order_history_button.grid(row=7, columnspan=2, pady=10)
 
 
         # Premade Box Order Section
@@ -66,6 +79,17 @@ class CustomerView:
         self.box_quantity_entry.grid(row=1, column=1, padx=5, pady=5)
 
         # Submit Box Order Button
-        self.submit_box_order_button = ttk.Button(self.box_frame, text="Submit Box Order", command=lambda:submit_premade_box_order(self.session, self.premade_box_combobox, self.box_quantity_entry))
+        self.submit_box_order_button = ttk.Button(self.box_frame, text="Submit Box Order", command=lambda:submit_premade_box_order(self.session, self.customer_id, self.premade_box_combobox, self.box_quantity_entry))
         self.submit_box_order_button.grid(row=2, columnspan=2, pady=10)
         
+    def update_delivery_fee(self, event):
+        """Update the delivery fee based on the selected option."""
+        delivery_option = self.delivery_combobox.get()
+        if delivery_option == "Home Delivery":
+            self.delivery_fee_label.config(text="$10.00")  # Set your delivery fee here
+        else:
+            self.delivery_fee_label.config(text="$0.00")
+
+    def submit_order(self):
+        # Call submit_order and pass the user_id
+        submit_order(self.session, self.customer_id, self.vegetable_combobox, self.quantity_entry, self.delivery_combobox, self.delivery_fee_label)
