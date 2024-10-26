@@ -11,12 +11,14 @@ class Payment(Base):
     payment_type = Column(Enum('credit_card', 'debit_card', 'account', name='payment_type_enum'), nullable=False)
     amount = Column(Float, nullable=False)
     payment_date = Column(DateTime, default=datetime.now)
+    payment_status = Column(Enum('pending', 'completed', 'failed', name='payment_status_enum'), default='pending')
 
     order = relationship('Order', back_populates='payments')
 
-    def __init__(self, order_id, payment_type, amount):
+    def __init__(self, order_id, payment_type, payment_status, amount):
         self.order_id = order_id
         self.payment_type = payment_type
+        self.payment_status = payment_status
         self.amount = amount
     
     def __str__(self):

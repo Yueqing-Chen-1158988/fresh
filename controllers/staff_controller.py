@@ -25,7 +25,7 @@ def submit_staff_order(self):
         return
 
     # Create a new order for the customer
-    new_order = Order(customer_id=customer.customer_id, order_type='vegetable', delivery_option='collect')
+    new_order = Order(customer_id=customer.customer_id, order_type='vegetable', delivery_option='Collect')
     self.session.add(new_order)
     self.session.commit()
 

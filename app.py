@@ -5,7 +5,7 @@ from views.login_view import LoginView
 class App:
     def __init__(self, root):
         self.root = root
-        self.root.title("Vegetable Ordering System")
+        self.root.title("Fresh Harvest Delivery")
         self.root.geometry("800x800")
 
         self.session = get_session()  # Initialize database session

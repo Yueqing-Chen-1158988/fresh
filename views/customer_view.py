@@ -21,63 +21,63 @@ class CustomerView:
         self.order_frame.pack(padx=10, pady=5, fill=tk.BOTH, expand=True)
 
         # Type Selection Dropdown
-        ttk.Label(self.order_frame, text="Select Type:").grid(row=0, column=0, padx=5, pady=5)
+        ttk.Label(self.order_frame, text="Select Type:").grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
         self.type_combobox = ttk.Combobox(self.order_frame, values=["Vegetable", "Premade Box"])
-        self.type_combobox.grid(row=0, column=1, padx=5, pady=5)
+        self.type_combobox.grid(row=0, column=1, padx=5, pady=5, sticky=tk.W)
         self.type_combobox.bind("<<ComboboxSelected>>", self.update_type_selection)
 
         # Item Selection (updates based on type)
+        ttk.Label(self.order_frame, text="Item:").grid(row=0, column=2, padx=5, pady=5, sticky=tk.W)
         self.item_combobox = ttk.Combobox(self.order_frame)
-        self.item_combobox.grid(row=1, column=1, padx=5, pady=5)
+        self.item_combobox.grid(row=0, column=3, padx=5, pady=5, sticky=tk.W)
         self.item_combobox.bind("<<ComboboxSelected>>", self.update_item_details)
 
         # Price and Unit Labels
-        ttk.Label(self.order_frame, text="Price per Unit:").grid(row=2, column=0, padx=5, pady=5)
+        ttk.Label(self.order_frame, text="Price per Unit:").grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
         self.price_label = ttk.Label(self.order_frame, text="")
-        self.price_label.grid(row=2, column=1, padx=5, pady=5)
+        self.price_label.grid(row=1, column=1, padx=5, pady=5, sticky=tk.W)
 
-        ttk.Label(self.order_frame, text="Unit:").grid(row=3, column=0, padx=5, pady=5)
+        ttk.Label(self.order_frame, text="Unit:").grid(row=1, column=2, padx=5, pady=5, sticky=tk.W)
         self.unit_label = ttk.Label(self.order_frame, text="")
-        self.unit_label.grid(row=3, column=1, padx=5, pady=5)
+        self.unit_label.grid(row=1, column=3, padx=5, pady=5, sticky=tk.W)
 
         # Quantity Entry
-        ttk.Label(self.order_frame, text="Quantity:").grid(row=4, column=0, padx=5, pady=5)
+        ttk.Label(self.order_frame, text="Quantity:").grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
         self.quantity_entry = ttk.Entry(self.order_frame)
-        self.quantity_entry.grid(row=4, column=1, padx=5, pady=5)
+        self.quantity_entry.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
 
         # Add to Cart Button
         self.add_to_cart_button = ttk.Button(self.order_frame, text="Add to Cart", command=self.add_to_cart)
-        self.add_to_cart_button.grid(row=5, columnspan=2, pady=10)
+        self.add_to_cart_button.grid(row=2, column=2, columnspan=4, pady=10)
 
-        # Cart and Checkout Section
+        # Delivery Option Section
+        ttk.Label(self.order_frame, text="Delivery Option:").grid(row=4, column=0, padx=5, pady=5, sticky=tk.W)
+        self.delivery_combobox = ttk.Combobox(self.order_frame, values=["Collect", "Delivery"])
+        self.delivery_combobox.grid(row=4, column=1, padx=5, pady=5, sticky=tk.W)
+        self.delivery_combobox.bind("<<ComboboxSelected>>", self.update_delivery_option_and_fee)
+
+        # Delivery Fee
+        ttk.Label(self.order_frame, text="Delivery Fee:").grid(row=4, column=2, padx=5, pady=5, sticky=tk.W)
+        self.delivery_fee_label = ttk.Label(self.order_frame, text="$0.00")
+        self.delivery_fee_label.grid(row=4, column=3, padx=5, pady=5, sticky=tk.W)
+
+        # Cart Section
         self.cart_frame = ttk.LabelFrame(self.customer_tab, text="Cart")
         self.cart_frame.pack(padx=10, pady=5, fill=tk.BOTH, expand=True)
         self.cart_listbox = tk.Listbox(self.cart_frame, width=50, height=10)
         self.cart_listbox.pack(padx=5, pady=5)
-        ttk.Label(self.cart_frame, text="Total Cost:").pack(padx=5, pady=5)
+        
+        ttk.Label(self.cart_frame, text="Total Cost:").pack(padx=5, pady=5, anchor=tk.W)
         self.total_cost_label = ttk.Label(self.cart_frame, text="$0.00")
-        self.total_cost_label.pack(padx=5, pady=5)
-
-        # Add Delivery Option Section
-        ttk.Label(self.order_frame, text="Delivery Option:").grid(row=6, column=0, padx=5, pady=5)
-        self.delivery_option = "Collect"  # Default to collect
-        self.delivery_combobox = ttk.Combobox(self.order_frame, values=["Collect", "Delivery"])
-        self.delivery_combobox.grid(row=6, column=1, padx=5, pady=5)
-        self.delivery_combobox.bind("<<ComboboxSelected>>", self.update_delivery_option_and_fee)
-
-        # Delivery Fee
-        ttk.Label(self.order_frame, text="Delivery Fee:").grid(row=7, column=0, padx=5, pady=5)
-        self.delivery_fee = 0.00  # Default delivery fee
-        self.delivery_fee_label = ttk.Label(self.order_frame, text="$0.00")
-        self.delivery_fee_label.grid(row=7, column=1, padx=5, pady=5)
+        self.total_cost_label.pack(padx=5, pady=5, anchor=tk.W)
 
         # Submit Order Button
         self.submit_order_button = ttk.Button(self.cart_frame, text="Submit Order", command=self.submit_order_handler)
         self.submit_order_button.pack(pady=10)
 
-        # View Order History Button
-        self.view_order_history_button = ttk.Button(self.order_frame, text="View Order History", command=lambda:OrderView.open_order_history(self.root, self.session, self.customer_id))
-        self.view_order_history_button.grid(row=8, columnspan=2, pady=10)
+        # View Order History Button at the Bottom
+        self.view_order_history_button = ttk.Button(self.customer_tab, text="View Order History", command=lambda: OrderView.open_order_history(self.root, self.session, self.customer_id))
+        self.view_order_history_button.pack(pady=10)
 
 
     def update_type_selection(self, event):
@@ -126,7 +126,6 @@ class CustomerView:
         self.cart_listbox.delete(0, tk.END)
         self.cart.clear()
         self.update_total_cost()
-        tk.messagebox.showinfo("Order Submitted", "Your order has been submitted successfully.")
 
     def update_delivery_option_and_fee(self, event):
         """Update the delivery fee based on the selected option."""

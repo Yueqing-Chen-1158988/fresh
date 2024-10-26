@@ -70,43 +70,18 @@ def submit_order(session, customer_id, cart, delivery_option, delivery_fee):
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred: {e}")
 
-
-# def submit_premade_box_order(session, premade_box_combobox, box_quantity_entry):
-#     """Submit a new order for a premade box."""
-#     box_name = premade_box_combobox.get()
-#     quantity = box_quantity_entry.get()
-
-#     if not box_name or not quantity.isdigit() or int(quantity) <= 0:
-#         messagebox.showerror("Error", "Please select a premade box and enter a valid positive quantity.")
-#         return
-
-#     # Fetch premade box from the database
-#     premade_box = session.query(PremadeBox).filter_by(size=box_name).first()
-#     if premade_box:
-#         # Create a new order
-#         new_order = Order(customer_id=1, order_type='premade_box', delivery_option='collect')  # Placeholder customer_id
-#         session.add(new_order)
-#         session.commit()  # Commit to get the new order ID
-
-#         # Create an order line for the premade box
-#         order_line = OrderLine(order_id=new_order.order_id, item_name=premade_box.size, quantity=int(quantity), price=premade_box.price)
-#         session.add(order_line)
-#         session.commit()
-
-#         messagebox.showinfo("Success", f"Order for {quantity} {box_name} box has been placed.")
-#     else:
-#         messagebox.showerror("Error", "Premade box not found.")
-
 def load_order_history(session, customer_id):
     """Fetch order history for a specific customer."""
-    # Fetch orders for the customer from the database
     orders = session.query(Order).filter_by(customer_id=customer_id).all()
     order_data = []
     for order in orders:
         order_lines = session.query(OrderLine).filter_by(order_id=order.order_id).all()
         total_cost = sum(line.quantity * line.price for line in order_lines) + order.delivery_fee
-        for line in order_lines:
-            order_data.append((order.order_id, line.item_name, line.quantity, f"${line.price:.2f}", f"${total_cost:.2f}", order.status))
+
+        # Format order_date to DD/MM/YYYY format for New Zealand
+        formatted_date = order.order_date.strftime("%d/%m/%Y")
+
+        order_data.append((order.order_id, formatted_date, f"${total_cost:.2f}", order.status))
     return order_data
 
 def cancel_order(session, order_id):
@@ -126,12 +101,9 @@ def view_order_history(session, customer_id):
     # Display the order history in a readable format
     if order_data:
         history_text = "Order History:\n\n"
-        for order_id, item_name, quantity, price, subtotal, total_cost, status in order_data:
+        for order_id, order_date, total_cost, status in order_data:
             history_text += (f"Order ID: {order_id}\n"
-                             f"Item: {item_name}\n"
-                             f"Quantity: {quantity}\n"
-                             f"Price per unit: {price}\n"
-                             f"Subtotal: {subtotal}\n"
+                             f"Date: {order_date}\n"
                              f"Total Cost: {total_cost}\n"
                              f"Status: {status}\n\n")
         messagebox.showinfo("Order History", history_text)

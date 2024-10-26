@@ -1,3 +1,4 @@
+from datetime import datetime
 from database_setup import get_session
 from models.base import Base
 from models.customer import Customer, CorporateCustomer
@@ -70,8 +71,8 @@ def populate_data():
     # Create an order for Jo
     order_jo = Order(
         customer_id=jo_ann.customer_id, 
-        # order_type='vegetable',  # Assuming the order_type should correspond to the items in the order
-        delivery_option="collect"
+        order_date=datetime(2024, 10, 24, 9, 10),
+        delivery_option="Collect"
     )
 
     # Add the order to the session and commit to get the order_id
@@ -98,6 +99,7 @@ def populate_data():
     payment_jo = Payment(
         order_id=order_jo.order_id,  # This will be set after the order is added to the session
         payment_type="credit_card",  # Use the enum type defined in the model
+        payment_status="completed",
         amount=order_line_1.price + order_line_2.price  # Total amount from order lines
     )
 
