@@ -1,6 +1,6 @@
 from tkinter import ttk, messagebox
 import tkinter as tk
-from controllers.order_controller import load_order_history, cancel_order
+from controllers.customer_controller import load_order_history, cancel_order
 
 class OrderView:
     def __init__(self, root, session, user_id):

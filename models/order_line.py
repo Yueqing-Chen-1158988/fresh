@@ -7,14 +7,16 @@ class OrderLine(Base):
     
     line_id = Column(Integer, primary_key=True, autoincrement=True)
     order_id = Column(Integer, ForeignKey('orders.order_id'), nullable=False)
+    item_type = Column(Enum('Vegetable', 'Premade Box', name='item_type_enum'), nullable=False)
     item_name = Column(String(50), nullable=False)  # This can represent either a vegetable or a premade box
     quantity = Column(Integer, nullable=False)
     price = Column(Float, nullable=False)
     
     order = relationship('Order', back_populates='order_lines')
 
-    def __init__(self, order_id, item_name, quantity, price):
+    def __init__(self, order_id, item_type, item_name, quantity, price):
         self.order_id = order_id
+        self.item_type = item_type
         self.item_name = item_name
         self.quantity = quantity
         self.price = price

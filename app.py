@@ -1,5 +1,5 @@
 import tkinter as tk
-from db.database_setup import get_session
+from database_setup import get_session
 from models.order import Order
 from views.login_view import LoginView
 class App:

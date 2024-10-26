@@ -70,7 +70,7 @@ def populate_data():
     # Create an order for Jo
     order_jo = Order(
         customer_id=jo_ann.customer_id, 
-        order_type='vegetable',  # Assuming the order_type should correspond to the items in the order
+        # order_type='vegetable',  # Assuming the order_type should correspond to the items in the order
         delivery_option="collect"
     )
 
@@ -81,12 +81,14 @@ def populate_data():
     # Add order lines for the order (one for a vegetable, one for a premade box)
     order_line_1 = OrderLine(
         order_id=order_jo.order_id,  # This will be set after the order is added to the session
+        item_type="Vegetable",  # Use the enum type defined in the model
         item_name=carrot.name,  # Use the name from the Vegetable model
         quantity=2,
         price=carrot.price_per_unit * 2  # Assuming price is calculated based on quantity
     )
     order_line_2 = OrderLine(
         order_id=order_jo.order_id,  # This will be set after the order is added to the session
+        item_type="Premade Box",  # Use the enum type defined in the model
         item_name=small_box.size,  # Use the size as the item name
         quantity=1,
         price=small_box.price  # Direct price from the PremadeBox
