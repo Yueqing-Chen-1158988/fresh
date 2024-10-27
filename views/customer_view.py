@@ -54,6 +54,7 @@ class CustomerView:
         ttk.Label(self.order_frame, text="Delivery Option:").grid(row=4, column=0, padx=5, pady=5, sticky=tk.W)
         self.delivery_option = "Collect"  # Default delivery option
         self.delivery_combobox = ttk.Combobox(self.order_frame, values=["Collect", "Delivery"])
+        self.delivery_combobox.set("Collect") 
         self.delivery_combobox.grid(row=4, column=1, padx=5, pady=5, sticky=tk.W)
         self.delivery_combobox.bind("<<ComboboxSelected>>", self.update_delivery_option_and_fee)
 

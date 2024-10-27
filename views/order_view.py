@@ -1,6 +1,10 @@
-from tkinter import ttk, messagebox
+from tkinter import Toplevel, ttk, messagebox
 import tkinter as tk
+from flask import session
 from controllers.customer_controller import load_order_history, cancel_order
+from models.order import Order
+from models.vegetable_premadeBox import Vegetable
+from sqlalchemy.orm import joinedload
 
 class OrderView:
     def __init__(self, root, session, user_id):
@@ -85,8 +89,95 @@ class OrderView:
 
         order_id = self.order_history_tree.item(selected_item)['values'][0]
         # Add logic here to display order details
-        messagebox.showinfo("Order Details", f"Details for Order ID: {order_id}")
+        self.view_order_detail(order_id)
+
+    def view_order_detail(self, order_id):
+        """Display detailed information for a specific order, including order lines."""
+        order_detail = self.get_order_detail(order_id)
+        if not order_detail:
+            messagebox.showerror("Error", "Unable to retrieve order details.")
+            return
+        
+        # Create a new window to display the order details
+        detail_window = Toplevel(self.root)
+        detail_window.title(f"Order Details - ID: {order_id}")
+        detail_window.geometry("700x500")
+
+        # Delivery option and fee
+        ttk.Label(detail_window, text=f"Delivery Option: {order_detail['delivery_option']}").pack(anchor=tk.W, padx=10, pady=5)
+        ttk.Label(detail_window, text=f"Delivery Fee: ${order_detail['delivery_fee']:.2f}").pack(anchor=tk.W, padx=10, pady=5)
+
+        # Total cost
+        ttk.Label(detail_window, text=f"Total Cost: ${order_detail['total_cost']:.2f}", font=("Arial", 12, "bold")).pack(anchor=tk.W, padx=10, pady=10)
+
+        # Separate frame for each item type
+        veg_frame = ttk.LabelFrame(detail_window, text="Vegetable Items")
+        veg_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+
+        box_frame = ttk.LabelFrame(detail_window, text="Premade Box Items")
+        box_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+
+        # Vegetable Items Treeview
+        veg_tree = ttk.Treeview(veg_frame, columns=("Item", "Quantity", "Unit", "Price"), show="headings")
+        veg_tree.heading("Item", text="Item")
+        veg_tree.heading("Quantity", text="Quantity")
+        veg_tree.heading("Unit", text="Unit")
+        veg_tree.heading("Price", text="Price")
+        veg_tree.pack(fill=tk.BOTH, expand=True)
+
+        # Premade Box Items Treeview
+        box_tree = ttk.Treeview(box_frame, columns=("Size", "Quantity", "Price"), show="headings")
+        box_tree.heading("Size", text="Size")
+        box_tree.heading("Quantity", text="Quantity")
+        box_tree.heading("Price", text="Price")
+        box_tree.pack(fill=tk.BOTH, expand=True)
+
+        # Populate Treeviews with Order Lines data
+        for line in order_detail['order_lines']:
+            if line['item_type'] == 'Vegetable':
+                veg_tree.insert("", "end", values=(line['item_name'], line['quantity'], line['unit'], f"${line['subtotal']:.2f}"))
+            elif line['item_type'] == 'Premade Box':
+                box_tree.insert("", "end", values=(line['item_name'], line['quantity'], f"${line['subtotal']:.2f}"))
+
+        detail_window.transient(self.root)
+        detail_window.grab_set()
+        self.root.wait_window(detail_window)
 
     def open_order_history(root, session, user_id):
         orderview = OrderView(root, session, user_id)
         load_order_history(session, orderview.order_history_tree)
+
+    def get_order_detail(self, order_id):
+        """Fetch detailed order information, including order lines, delivery fee, and total cost."""
+        order = self.session.query(Order).options(joinedload(Order.order_lines)).filter(Order.order_id == order_id).first()
+        if not order:
+            return None
+
+        order_detail = {
+            "delivery_option": order.delivery_option,
+            "delivery_fee": order.delivery_fee,
+            "total_cost": sum(line.quantity * line.price for line in order.order_lines) + order.delivery_fee,
+            "order_lines": []
+        }
+
+        # Collect order line details
+        for line in order.order_lines:
+            item_data = {
+                "item_type": line.item_type,
+                "item_name": line.item_name,
+                "quantity": line.quantity,
+                "price": line.price,
+                "subtotal": line.quantity * line.price
+            }
+            
+            if line.item_type == 'Vegetable':
+                # Get the unit of the vegetable (assuming price includes unit)
+                vegetable = self.session.query(Vegetable).filter(Vegetable.name == line.item_name).first()
+                item_data["unit"] = vegetable.unit if vegetable else "Unknown"
+            else:
+                # Premade boxes do not need units
+                item_data["unit"] = "N/A"
+            
+            order_detail["order_lines"].append(item_data)
+
+        return order_detail

@@ -49,6 +49,10 @@ def submit_order(session, customer_id, cart, delivery_option, delivery_fee):
         messagebox.showerror("Error", "The cart is empty. Add items before submitting.")
         return
     
+    if not delivery_option:
+        messagebox.showerror("Error", "Please select a delivery option before submitting.")
+        return
+    
     try:
         # Create a new order
         new_order = Order(customer_id=customer_id, delivery_option=delivery_option, delivery_fee=delivery_fee)
