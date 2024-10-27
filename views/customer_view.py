@@ -1,6 +1,6 @@
-from tkinter import ttk
+from tkinter import messagebox, ttk
 import tkinter as tk
-from controllers.customer_controller import get_premade_box_sizes, get_vegetable_names, update_vegetable_info
+from controllers.customer_controller import get_customer_profile, get_premade_box_sizes, get_vegetable_names, update_vegetable_info
 from controllers.customer_controller import submit_order
 from views.order_view import OrderView
 
@@ -79,7 +79,11 @@ class CustomerView:
 
         # View Order History Button at the Bottom
         self.view_order_history_button = ttk.Button(self.customer_tab, text="View Order History", command=lambda: OrderView.open_order_history(self.root, self.session, self.customer_id))
-        self.view_order_history_button.pack(pady=10)
+        self.view_order_history_button.pack(side=tk.LEFT, padx=10)
+
+        # View Profile Button
+        self.view_profile_button = ttk.Button(self.customer_tab, text="View Profile", command=self.view_profile)
+        self.view_profile_button.pack(side=tk.LEFT, padx=10)
 
 
     def update_type_selection(self, event):
@@ -145,3 +149,17 @@ class CustomerView:
         # Replace with actual price fetching logic
         box_prices = {"Small Box": 10.0, "Medium Box": 15.0, "Large Box": 20.0}
         return box_prices.get(box_name, 0.0)
+
+    def view_profile(self):
+        """Display customer profile information in a pop-up window."""
+        profile = get_customer_profile(self.session, self.customer_id)
+        if profile:
+            profile_info = f"Name: {profile.name}\nEmail: {profile.email}\nBalance: ${profile.balance:.2f}"
+            
+            # Check if it's a corporate customer and add additional details
+            if hasattr(profile, 'credit_limit'):
+                profile_info += f"\nCredit Limit: ${profile.credit_limit:.2f}\nDiscount Rate: {profile.discount_rate * 100:.0f}%"
+
+            messagebox.showinfo("Customer Profile", profile_info)
+        else:
+            messagebox.showerror("Error", "Unable to load profile information.")

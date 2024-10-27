@@ -1,4 +1,5 @@
 from tkinter import messagebox
+from models.customer import Customer
 from models.order import Order
 from models.order_line import OrderLine
 from models.vegetable_premadeBox import PremadeBox, Vegetable
@@ -109,3 +110,7 @@ def view_order_history(session, customer_id):
         messagebox.showinfo("Order History", history_text)
     else:
         messagebox.showinfo("Order History", "No orders found.")                
+
+def get_customer_profile(session, customer_id):
+    """Fetch customer profile details by ID."""
+    return session.query(Customer).filter_by(customer_id=customer_id).first()
