@@ -52,12 +52,14 @@ class CustomerView:
 
         # Delivery Option Section
         ttk.Label(self.order_frame, text="Delivery Option:").grid(row=4, column=0, padx=5, pady=5, sticky=tk.W)
+        self.delivery_option = "Collect"  # Default delivery option
         self.delivery_combobox = ttk.Combobox(self.order_frame, values=["Collect", "Delivery"])
         self.delivery_combobox.grid(row=4, column=1, padx=5, pady=5, sticky=tk.W)
         self.delivery_combobox.bind("<<ComboboxSelected>>", self.update_delivery_option_and_fee)
 
         # Delivery Fee
         ttk.Label(self.order_frame, text="Delivery Fee:").grid(row=4, column=2, padx=5, pady=5, sticky=tk.W)
+        self.delivery_fee = 0.0  # Default delivery fee
         self.delivery_fee_label = ttk.Label(self.order_frame, text="$0.00")
         self.delivery_fee_label.grid(row=4, column=3, padx=5, pady=5, sticky=tk.W)
 

@@ -20,10 +20,9 @@ class Order(Base):
     order_lines = relationship('OrderLine', back_populates='order')
     payments = relationship('Payment', back_populates='order')
 
-    def __init__(self, customer_id, order_date, delivery_option='Collect', delivery_fee=0.0, staff_id=None, status='Processing'):
+    def __init__(self, customer_id, delivery_option='Collect', delivery_fee=0.0, staff_id=None, status='Processing'):
         self.customer_id = customer_id
         self.staff_id = staff_id
-        self.order_date = order_date
         self.delivery_option = delivery_option
         self.delivery_fee = delivery_fee
         self.status = status
