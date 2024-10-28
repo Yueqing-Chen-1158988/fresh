@@ -4,6 +4,7 @@ from models.order_line import OrderLine
 from models.customer import Customer
 from datetime import datetime, timedelta
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 
 class StaffController:
     def __init__(self, session):
@@ -31,6 +32,41 @@ class StaffController:
     def get_order_total(self, order):
         return sum(line.quantity * line.price for line in order.order_lines) + order.delivery_fee
 
+    def get_order_detail(self, order_id):
+        """Fetch detailed order information, including order lines, delivery fee, and total cost."""
+        order = self.session.query(Order).options(joinedload(Order.order_lines)).filter(Order.order_id == order_id).first()
+        if not order:
+            return None
+
+        order_detail = {
+            "delivery_option": order.delivery_option,
+            "delivery_fee": order.delivery_fee,
+            "total_cost": sum(line.quantity * line.price for line in order.order_lines) + order.delivery_fee,
+            "order_lines": []
+        }
+
+        # Collect order line details
+        for line in order.order_lines:
+            item_data = {
+                "item_type": line.item_type,
+                "item_name": line.item_name,
+                "quantity": line.quantity,
+                "price": line.price,
+                "subtotal": line.quantity * line.price
+            }
+            
+            if line.item_type == 'Vegetable':
+                # Get the unit of the vegetable (assuming price includes unit)
+                vegetable = self.session.query(Vegetable).filter(Vegetable.name == line.item_name).first()
+                item_data["unit"] = vegetable.unit if vegetable else "Unknown"
+            else:
+                # Premade boxes do not need units
+                item_data["unit"] = "N/A"
+            
+            order_detail["order_lines"].append(item_data)
+
+        return order_detail
+    
     def update_order_status(self, order_id, new_status):
         order = self.session.query(Order).filter_by(order_id=order_id).first()
         if order:

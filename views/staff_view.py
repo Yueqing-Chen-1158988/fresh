@@ -31,7 +31,7 @@ class StaffView:
 
         self.order_type_combobox = ttk.Combobox(order_frame, values=["Current Orders", "Previous Orders"], state="readonly")
         self.order_type_combobox.set("Select Order Type")
-        self.order_type_combobox.pack(pady=5)
+        self.order_type_combobox.pack(side=tk.LEFT, padx=10)
 
         self.view_orders_button = ttk.Button(order_frame, text="View All Orders", command=self.open_orders_window)
         self.view_orders_button.pack(side=tk.LEFT, padx=10)
@@ -71,6 +71,7 @@ class StaffView:
         vegetable_window = Toplevel(self.root)
         vegetable_window.title("View All Vegetables")
 
+        # Create a Treeview to display vegetables
         veg_tree = ttk.Treeview(vegetable_window, columns=("ID", "Name", "Unit", "Price"), show="headings")
         veg_tree.heading("ID", text="ID")
         veg_tree.heading("Name", text="Name")
@@ -78,6 +79,7 @@ class StaffView:
         veg_tree.heading("Price", text="Price")
         veg_tree.pack(side="left", fill="both", expand=True)
 
+        # Add a vertical scrollbar for the Treeview
         veg_scroll = ttk.Scrollbar(vegetable_window, orient="vertical", command=veg_tree.yview)
         veg_tree.configure(yscrollcommand=veg_scroll.set)
         veg_scroll.pack(side="right", fill="y")
@@ -90,12 +92,14 @@ class StaffView:
         box_window = Toplevel(self.root)
         box_window.title("View All Premade Boxes")
 
+        # Create a Treeview to display premade boxes
         box_tree = ttk.Treeview(box_window, columns=("ID", "Size", "Price"), show="headings")
         box_tree.heading("ID", text="ID")
         box_tree.heading("Size", text="Size")
         box_tree.heading("Price", text="Price")
         box_tree.pack(side="left", fill="both", expand=True)
 
+        # Add a vertical scrollbar for the Treeview
         box_scroll = ttk.Scrollbar(box_window, orient="vertical", command=box_tree.yview)
         box_tree.configure(yscrollcommand=box_scroll.set)
         box_scroll.pack(side="right", fill="y")
@@ -134,10 +138,11 @@ class StaffView:
         button_frame = ttk.Frame(content_frame)
         button_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
 
-        self.view_order_details_button = ttk.Button(button_frame, text="View Order Details", command=lambda: self.view_order_details(order_tree))
+        # Buttons for viewing order details, updating status, and canceling order
+        self.view_order_details_button = ttk.Button(button_frame, text="View Order Details", command=lambda: self.on_order_details(order_tree))
         self.view_order_details_button.pack(side=tk.LEFT, padx=10)
 
-        self.update_order_status_button = ttk.Button(button_frame, text="Update Status", command=lambda: self.update_order_status(order_tree))
+        self.update_order_status_button = ttk.Button(button_frame, text="Update Status", command=lambda: self.open_update_status_window(order_tree))
         self.update_order_status_button.pack(side=tk.LEFT, padx=10)
 
         self.cancel_order_button = ttk.Button(button_frame, text="Cancel Order", command=lambda: self.cancel_order(order_tree))
@@ -179,21 +184,126 @@ class StaffView:
             customer_name = order.customer.name if order.customer else "Unknown"  # Safely get the customer name
             treeview.insert("", "end", values=(order.order_id, customer_name, order.status))
 
-    def update_order_status(self, order_tree):
+    def on_order_details(self, order_tree):
+        """Handle the order details button click."""
+        selected_item = order_tree.selection()
+        if not selected_item:
+            messagebox.showerror("Error", "Please select an order to view details.")
+            return
+
+        order_id = order_tree.item(selected_item)['values'][0]
+        # Add logic here to display order details
+        self.view_order_detail(order_id)
+
+    def view_order_detail(self, order_id):
+        """Display detailed information for a specific order, including order lines."""
+        order_detail = self.controller.get_order_detail(order_id)
+        if not order_detail:
+            messagebox.showerror("Error", "Unable to retrieve order details.")
+            return
+        
+        # Create a new window to display the order details
+        detail_window = Toplevel(self.root)
+        detail_window.title(f"Order Details - ID: {order_id}")
+        detail_window.geometry("700x500")
+
+        # Delivery option and fee
+        ttk.Label(detail_window, text=f"Delivery Option: {order_detail['delivery_option']}").pack(anchor=tk.W, padx=10, pady=5)
+        ttk.Label(detail_window, text=f"Delivery Fee: ${order_detail['delivery_fee']:.2f}").pack(anchor=tk.W, padx=10, pady=5)
+
+        # Total cost
+        ttk.Label(detail_window, text=f"Total Cost: ${order_detail['total_cost']:.2f}", font=("Arial", 12, "bold")).pack(anchor=tk.W, padx=10, pady=10)
+
+        # Separate frame for each item type
+        veg_frame = ttk.LabelFrame(detail_window, text="Vegetable Items")
+        veg_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+
+        box_frame = ttk.LabelFrame(detail_window, text="Premade Box Items")
+        box_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+
+        # Vegetable Items Treeview
+        veg_tree = ttk.Treeview(veg_frame, columns=("Item", "Quantity", "Unit", "Price"), show="headings")
+        veg_tree.heading("Item", text="Item")
+        veg_tree.column("Item", width=80)
+        veg_tree.heading("Quantity", text="Quantity")
+        veg_tree.column("Quantity", width=40)
+        veg_tree.heading("Unit", text="Unit")
+        veg_tree.column("Unit", width=40)
+        veg_tree.heading("Price", text="Price")
+        veg_tree.column("Price", width=40)
+        veg_tree.pack(fill=tk.BOTH, expand=True)
+
+        # Premade Box Items Treeview
+        box_tree = ttk.Treeview(box_frame, columns=("Size", "Quantity", "Price"), show="headings")
+        box_tree.heading("Size", text="Size")
+        box_tree.column("Size", width=80)
+        box_tree.heading("Quantity", text="Quantity")
+        box_tree.column("Quantity", width=40)
+        box_tree.heading("Price", text="Price")
+        box_tree.column("Price", width=40)
+        box_tree.pack(fill=tk.BOTH, expand=True)
+
+        # Populate Treeviews with Order Lines data
+        for line in order_detail['order_lines']:
+            if line['item_type'] == 'Vegetable':
+                veg_tree.insert("", "end", values=(line['item_name'], line['quantity'], line['unit'], f"${line['subtotal']:.2f}"))
+            elif line['item_type'] == 'Premade Box':
+                box_tree.insert("", "end", values=(line['item_name'], line['quantity'], f"${line['subtotal']:.2f}"))
+
+        detail_window.transient(self.root)
+        detail_window.grab_set()
+        self.root.wait_window(detail_window)
+
+    def open_update_status_window(self, order_tree):
+        """Open a new window to update the status of a selected order."""
         selected_item = order_tree.selection()
         if not selected_item:
             messagebox.showwarning("Warning", "Please select an order to update.")
             return
-        
+
+        # Get the selected order's ID and current status
         order_id = order_tree.item(selected_item)["values"][0]
-        new_status = self.status_combobox.get()
+        current_status = order_tree.item(selected_item)["values"][2]
+
+        # Create the update status window
+        update_window = Toplevel(self.root)
+        update_window.title("Update Order Status")
+        update_window.geometry("300x200")
+
+        ttk.Label(update_window, text=f"Order ID: {order_id}", font=("Arial", 12)).pack(pady=10)
+        ttk.Label(update_window, text=f"Current Status: {current_status}", font=("Arial", 12)).pack(pady=5)
+
+        # Status combobox for selecting new status
+        ttk.Label(update_window, text="New Status:").pack(pady=5)
+        status_combobox = ttk.Combobox(update_window, values=["Processing", "Completed", "Cancelled"], state="readonly")
+        status_combobox.set("Select Status")
+        status_combobox.pack(pady=5)
+
+        # Button to confirm status update
+        confirm_button = ttk.Button(update_window, text="Update Status", command=lambda: self.confirm_status_update(order_id, status_combobox, update_window, order_tree))
+        confirm_button.pack(pady=10)
+
+    def confirm_status_update(self, order_id, status_combobox, update_window, order_tree):
+        """Confirm and update the order status."""
+        new_status = status_combobox.get()
+
+        if new_status == "Select Status" or not new_status:
+            messagebox.showwarning("Warning", "Please select a new status.")
+            return
+
+        # Call the controller to update the status
         success = self.controller.update_order_status(order_id, new_status)
         if success:
             messagebox.showinfo("Success", "Order status updated.")
+            update_window.destroy()  # Close the update status window
+
+            # Refresh the displayed orders in the main order window
+            self.view_orders(order_tree)
         else:
             messagebox.showerror("Error", "Order ID not found.")
 
     def cancel_order(self, order_tree):
+        """Cancel an order that is not completed."""
         selected_item = order_tree.selection()
         if not selected_item:
             messagebox.showwarning("Warning", "Please select an order to cancel.")
@@ -208,19 +318,21 @@ class StaffView:
             messagebox.showerror("Error", "Order ID not found or cannot be canceled.")
 
     def view_order_details(self, order_tree):
+        """View detailed information for a selected order."""
         selected_item = order_tree.selection()
         if not selected_item:
             messagebox.showwarning("Warning", "Please select an order to view details.")
             return
         
         order_id = order_tree.item(selected_item)["values"][0]
-        details = self.controller.get_order_details(order_id)
+        details = self.controller.get_order_detail(order_id)
         if details:
             messagebox.showinfo("Order Details", details)
         else:
             messagebox.showerror("Error", "Order details not found.")
 
     def view_customer_details(self):
+        """View customer details based on email."""
         customer_email = self.customer_search_entry.get().strip()
         if not customer_email:
             messagebox.showwarning("Warning", "Please enter a customer email.")
@@ -232,15 +344,17 @@ class StaffView:
             messagebox.showerror("Error", "Customer not found.")
 
     def generate_report(self):
+        """Generate a sales report based on the selected type."""
         report_type = self.report_type_combobox.get()
         if report_type == "Select Report Type":
             messagebox.showwarning("Warning", "Please select a report type.")
             return
-        report_data = self.controller.generate_report(report_type)
+        report_data = self.controller.generate_sales_report(report_type)
         messagebox.showinfo("Report", report_data)
 
     def view_popular_items(self):
-        popular_items = self.controller.get_most_popular_items()
+        """View the most popular items based on sales."""
+        popular_items = self.controller.get_popular_items()
         if popular_items:
             messagebox.showinfo("Most Popular Items", popular_items)
         else:
