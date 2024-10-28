@@ -1,8 +1,7 @@
 from tkinter import messagebox, ttk
 import tkinter as tk
-from controllers.customer_controller import get_customer_profile, get_premade_box_sizes, get_vegetable_names, update_vegetable_info
-from controllers.customer_controller import submit_order
 from views.order_view import OrderView
+from controllers.customer_controller import CustomerController
 
 class CustomerView:
     def __init__(self, root, session, customer_id, customer_tab):
@@ -10,6 +9,7 @@ class CustomerView:
         self.session = session
         self.customer_id = customer_id
         self.customer_tab = customer_tab
+        self.controller = CustomerController(session)
         self.cart = []
         self.init_customer_interface()
 
@@ -78,8 +78,18 @@ class CustomerView:
         self.submit_order_button = ttk.Button(self.cart_frame, text="Submit Order", command=self.submit_order_handler)
         self.submit_order_button.pack(pady=10)
 
+        # Payment Type Dropdown
+        ttk.Label(self.cart_frame, text="Payment Type:").pack(pady=5, anchor=tk.W)
+        self.payment_type_combobox = ttk.Combobox(self.cart_frame, values=["credit_card", "debit_card", "account"])
+        self.payment_type_combobox.pack(anchor=tk.W)
+
+        # Make Payment Button
+        self.make_payment_button = ttk.Button(self.cart_frame, text="Make Payment", command=self.make_payment_handler)
+        self.make_payment_button.pack(pady=5)
+
         # View Order History Button at the Bottom
-        self.view_order_history_button = ttk.Button(self.customer_tab, text="View Order History", command=lambda: OrderView.open_order_history(self.root, self.session, self.customer_id))
+        orderView = OrderView(self.root, self.session, self.customer_id)
+        self.view_order_history_button = ttk.Button(self.customer_tab, text="View Order History", command=lambda: orderView.open_order_history(self.root, self.session, self.customer_id))
         self.view_order_history_button.pack(side=tk.LEFT, padx=10)
 
         # View Profile Button
@@ -91,10 +101,10 @@ class CustomerView:
         """Update item options based on selected type."""
         selected_type = self.type_combobox.get()
         if selected_type == "Vegetable":
-            self.item_combobox.config(values=get_vegetable_names(self.session))
+            self.item_combobox.config(values=self.controller.get_vegetable_names(self.session))
             self.unit_label.config(text="")  # Clear unit display for non-vegetable selections
         elif selected_type == "Premade Box":
-            self.item_combobox.config(values=get_premade_box_sizes(self.session))
+            self.item_combobox.config(values=self.controller.get_premade_box_sizes(self.session))
             self.unit_label.config(text="N/A")  # Hide unit label for premade boxes
 
     def update_item_details(self, event):
@@ -102,7 +112,7 @@ class CustomerView:
         selected_type = self.type_combobox.get()
         selected_item = self.item_combobox.get()
         if selected_type == "Vegetable":
-            update_vegetable_info(event, self.session, self.item_combobox, self.price_label, self.unit_label)
+            self.controller.update_vegetable_info(event, self.session, self.item_combobox, self.price_label, self.unit_label)
         elif selected_type == "Premade Box":
             # For premade box, fetch and display only price
             price = self.get_premade_box_price(selected_item)  # Fetch box price
@@ -129,7 +139,9 @@ class CustomerView:
 
     def submit_order_handler(self):
         """Submit the order with items in the cart."""
-        submit_order(self.session, self.customer_id, self.cart, self.delivery_option, self.delivery_fee)
+        delivery_option = self.delivery_combobox.get()
+        delivery_fee = self.delivery_fee
+        self.order_id = self.controller.submit_order(self.session, self.customer_id, self.cart, delivery_option, delivery_fee)
         self.cart_listbox.delete(0, tk.END)
         self.cart.clear()
         self.update_total_cost()
@@ -153,7 +165,7 @@ class CustomerView:
 
     def view_profile(self):
         """Display customer profile information in a pop-up window."""
-        profile = get_customer_profile(self.session, self.customer_id)
+        profile = self.controller.get_customer_profile(self.session, self.customer_id)
         if profile:
             profile_info = f"Name: {profile.name}\nEmail: {profile.email}\nBalance: ${profile.balance:.2f}"
             
@@ -164,3 +176,17 @@ class CustomerView:
             messagebox.showinfo("Customer Profile", profile_info)
         else:
             messagebox.showerror("Error", "Unable to load profile information.")
+
+    def make_payment_handler(self):
+        """Handler to initiate payment for the order."""
+        payment_type = self.payment_type_combobox.get()  # Retrieve selected payment type
+        if not payment_type:
+            messagebox.showerror("Error", "Please select a payment type.")
+            return
+
+        if not hasattr(self, 'order_id') or self.order_id is None:
+            messagebox.showerror("Error", "Please submit an order before making a payment.")
+            return
+        
+        total_cost = float(self.total_cost_label.cget("text").strip("$"))
+        self.controller.make_payment(self.session, self.order_id, payment_type, total_cost)

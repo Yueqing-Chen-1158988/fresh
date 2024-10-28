@@ -1,7 +1,6 @@
 from tkinter import Toplevel, ttk, messagebox
 import tkinter as tk
-from flask import session
-from controllers.customer_controller import load_order_history, cancel_order
+from controllers.customer_controller import CustomerController
 from models.order import Order
 from models.vegetable_premadeBox import Vegetable
 from sqlalchemy.orm import joinedload
@@ -11,6 +10,7 @@ class OrderView:
         """Open a new window to display the order history."""
         self.root = root
         self.session = session
+        self.controller = CustomerController(session)
         self.customer_id = user_id
 
         order_history_window = tk.Toplevel(self.root)
@@ -62,7 +62,7 @@ class OrderView:
             self.order_history_tree.delete(row)
 
         # Load data from the controller
-        order_data = load_order_history(self.session, self.customer_id)
+        order_data = self.controller.load_order_history(self.session, self.customer_id)
         for order in order_data:
             self.order_history_tree.insert("", "end", values=order)
 
@@ -74,7 +74,7 @@ class OrderView:
             return
 
         order_id = self.order_history_tree.item(selected_item)['values'][0]
-        if cancel_order(self.session, order_id):
+        if self.controller.cancel_order(self.session, order_id):
             messagebox.showinfo("Success", "Order has been cancelled.")
             self.populate_order_history()  # Refresh the view
         else:
@@ -143,9 +143,9 @@ class OrderView:
         detail_window.grab_set()
         self.root.wait_window(detail_window)
 
-    def open_order_history(root, session, user_id):
+    def open_order_history(self, root, session, user_id):
         orderview = OrderView(root, session, user_id)
-        load_order_history(session, orderview.order_history_tree)
+        self.controller.load_order_history(session, orderview.order_history_tree)
 
     def get_order_detail(self, order_id):
         """Fetch detailed order information, including order lines, delivery fee, and total cost."""
