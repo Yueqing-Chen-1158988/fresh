@@ -9,12 +9,15 @@ class StaffController:
     def __init__(self, session):
         self.session = session
 
-    def get_all_items(self):
+    def get_all_vegetables(self):
+        """Fetch all vegetables from the database."""
         vegetables = self.session.query(Vegetable).all()
+        return vegetables  # Return a list of Vegetable objects
+    
+    def get_all_premade_boxes(self):
+        """Fetch all premade boxes from the database."""
         premade_boxes = self.session.query(PremadeBox).all()
-        items_text = "Vegetables:\n" + "\n".join(f"- {veg.name}, {veg.unit}: ${veg.price_per_unit}" for veg in vegetables)
-        items_text += "\n\nPremade Boxes:\n" + "\n".join(f"- {box.size}: ${box.price}" for box in premade_boxes)
-        return items_text
+        return premade_boxes  # Return a list of PremadeBox objects
 
     def get_orders_by_type(self, order_type):
         if order_type == "Current Orders":
@@ -22,8 +25,8 @@ class StaffController:
         elif order_type == "Previous Orders":
             orders = self.session.query(Order).filter(Order.status != "Processing").all()
         else:
-            return None
-        return "\n".join(f"Order ID: {order.order_id}, Date: {order.order_date}, Status: {order.status}, Total: ${self.get_order_total(order)}" for order in orders)
+            return []  # Return an empty list if the order type is not recognized
+        return orders  # Return the list of orders
 
     def get_order_total(self, order):
         return sum(line.quantity * line.price for line in order.order_lines) + order.delivery_fee
