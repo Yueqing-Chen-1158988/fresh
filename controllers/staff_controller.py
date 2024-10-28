@@ -1,103 +1,62 @@
-from tkinter import messagebox
-
-from sqlalchemy import desc, func
-
-from models.customer import Customer
+from models.vegetable_premadeBox import Vegetable, PremadeBox
 from models.order import Order
 from models.order_line import OrderLine
-from models.vegetable_premadeBox import Vegetable
+from models.customer import Customer
+from datetime import datetime, timedelta
+from sqlalchemy import func
 
+class StaffController:
+    def __init__(self, session):
+        self.session = session
 
-def submit_staff_order(self):
-    """Submit a new order on behalf of a customer by staff."""
-    email = self.customer_email_entry.get()
-    vegetable_name = self.staff_vegetable_combobox.get()
-    quantity = self.staff_quantity_entry.get()
+    def get_all_items(self):
+        vegetables = self.session.query(Vegetable).all()
+        premade_boxes = self.session.query(PremadeBox).all()
+        items_text = "Vegetables:\n" + "\n".join(f"- {veg.name}, {veg.unit}: ${veg.price_per_unit}" for veg in vegetables)
+        items_text += "\n\nPremade Boxes:\n" + "\n".join(f"- {box.size}: ${box.price}" for box in premade_boxes)
+        return items_text
 
-    customer = self.session.query(Customer).filter_by(email=email).first()
-    if not customer:
-        messagebox.showerror("Error", "Customer not found.")
-        return
+    def get_orders_by_type(self, order_type):
+        if order_type == "Current Orders":
+            orders = self.session.query(Order).filter(Order.status == "Processing").all()
+        elif order_type == "Previous Orders":
+            orders = self.session.query(Order).filter(Order.status != "Processing").all()
+        else:
+            return None
+        return "\n".join(f"Order ID: {order.order_id}, Date: {order.order_date}, Status: {order.status}, Total: ${self.get_order_total(order)}" for order in orders)
 
-    vegetable = self.session.query(Vegetable).filter_by(name=vegetable_name).first()
-    if not vegetable:
-        messagebox.showerror("Error", "Vegetable not found.")
-        return
+    def get_order_total(self, order):
+        return sum(line.quantity * line.price for line in order.order_lines) + order.delivery_fee
 
-    # Create a new order for the customer
-    new_order = Order(customer_id=customer.customer_id, order_type='vegetable', delivery_option='Collect')
-    self.session.add(new_order)
-    self.session.commit()
+    def update_order_status(self, order_id, new_status):
+        order = self.session.query(Order).filter_by(order_id=order_id).first()
+        if order:
+            order.status = new_status
+            self.session.commit()
+            return True
+        return False
 
-    # Add order line
-    order_line = OrderLine(order_id=new_order.order_id, item_name=vegetable.name, quantity=int(quantity), price=vegetable.price_per_unit)
-    self.session.add(order_line)
-    self.session.commit()
+    def get_customer_details(self, email):
+        customer = self.session.query(Customer).filter_by(email=email).first()
+        if customer:
+            return f"Name: {customer.name}\nEmail: {customer.email}\nBalance: ${customer.balance}\nAddress: {customer.address}"
+        return None
 
-    messagebox.showinfo("Success", f"Order for {quantity} kg of {vegetable_name} placed for {email}.")
-
-
-def update_order_status(self):
-    """Update the status of an existing order."""
-    order_id = self.order_id_entry.get()
-    new_status = self.status_combobox.get()
-
-    order = self.session.query(Order).filter_by(order_id=order_id).first()
-    if not order:
-        messagebox.showerror("Error", "Order not found.")
-        return
-
-    order.status = new_status
-    self.session.commit()
-    messagebox.showinfo("Success", f"Order {order_id} status updated to {new_status}.")
-
-def view_customer_details(self):
-    """View customer details and order history."""
-    search_email = self.customer_search_entry.get()
-
-    customer = self.session.query(Customer).filter_by(email=search_email).first()
-    if customer:
-        self.customer_details_label.config(text=f"Name: {customer.name}, Email: {customer.email}, Balance: {customer.balance}")
-        self.load_customer_order_history(customer.customer_id)
-    else:
-        messagebox.showerror("Error", "Customer not found.")
-
-def generate_report(self):
-    """Generate and display reports based on the selection."""
-    report_type = self.report_combobox.get()
-    
-    if report_type == "Sales":
-        # Fetch sales data (e.g., total sales)
-        total_sales = self.session.query(func.sum(OrderLine.price * OrderLine.quantity)).scalar()
-        messagebox.showinfo("Sales Report", f"Total Sales: ${total_sales:.2f}")
-
-    elif report_type == "Customer List":
-        # Fetch customer list
+    def get_customer_list(self):
         customers = self.session.query(Customer).all()
-        customer_list = "\n".join([f"{c.name} ({c.email})" for c in customers])
-        messagebox.showinfo("Customer List", customer_list)
+        return "\n".join(f"{cust.name} ({cust.email})" for cust in customers)
 
-    elif report_type == "Item Popularity":
-        # Fetch most popular items
-        popular_items = self.session.query(OrderLine.item_name, func.sum(OrderLine.quantity).label('total_quantity'))\
-            .group_by(OrderLine.item_name).order_by(desc('total_quantity')).all()
-        item_list = "\n".join([f"{item_name}: {quantity} units sold" for item_name, quantity in popular_items])
-        messagebox.showinfo("Item Popularity", item_list)
+    def generate_sales_report(self, timeframe):
+        today = datetime.today()
+        start_date = today - {"Weekly Sales": timedelta(days=7), "Monthly Sales": timedelta(days=30), "Yearly Sales": timedelta(days=365)}.get(timeframe, timedelta(days=0))
+        if start_date == timedelta(days=0):
+            return None
+        sales = self.session.query(Order).filter(Order.order_date >= start_date).all()
+        total_sales = sum(self.get_order_total(order) for order in sales)
+        return f"Total Sales: ${total_sales:.2f}"
 
-
-# def update_order_status(self):
-#     """Update the status of a selected order."""
-#     order_id = self.staff_order_combobox.get()
-#     if not order_id:
-#         messagebox.showerror("Error", "Please select an order ID.")
-#         return
-
-#     # Update order status (this could be a dropdown to select status)
-#     order = self.session.query(Order).filter_by(order_id=order_id).first()
-#     if order:
-#         # Here you can set the new status (this could be from a dropdown in the GUI)
-#         order.status = "Processed"  # Update to the desired status
-#         self.session.commit()
-#         messagebox.showinfo("Success", f"Order {order_id} has been updated to 'Processed'.")
-#     else:
-#         messagebox.showerror("Error", "Order not found.")
+    def get_popular_items(self):
+        popular_items = self.session.query(OrderLine.item_name, func.count(OrderLine.item_name))\
+                                     .group_by(OrderLine.item_name)\
+                                     .order_by(func.count(OrderLine.item_name).desc()).limit(5).all()
+        return "Most Popular Items:\n" + "\n".join(f"{item} - Ordered {count} times" for item, count in popular_items)

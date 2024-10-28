@@ -10,8 +10,8 @@ class Staff(Base):
     name = Column(String(25), nullable=False)
     email = Column(String(50), unique=True, nullable=False)
     username = Column(String(25), unique=True, nullable=False)
-    password_hash = Column(String(256), nullable=False)  # Password hash for security
-
+    password_hash = Column(String(256), nullable=False)
+    
     orders = relationship('Order', back_populates='staff')
 
     def __init__(self, name, email, username, password):
