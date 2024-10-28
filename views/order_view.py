@@ -102,6 +102,7 @@ class OrderView:
         self.root.wait_window(detail_window)
 
     def open_order_history(self, root, session, user_id):
+        """Open a new window to display the order history."""
         order_history_window = tk.Toplevel(self.root)
         order_history_window.title("Order History")
         order_history_window.geometry("600x400")

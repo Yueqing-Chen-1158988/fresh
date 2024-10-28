@@ -21,6 +21,7 @@ class StaffController:
         return premade_boxes  # Return a list of PremadeBox objects
 
     def get_orders_by_type(self, order_type):
+        """Fetch orders based on the order type."""
         if order_type == "Current Orders":
             orders = self.session.query(Order).filter(Order.status == "Processing").all()
         elif order_type == "Previous Orders":
@@ -30,6 +31,7 @@ class StaffController:
         return orders  # Return the list of orders
 
     def get_order_total(self, order):
+        """Calculate the total cost of an order."""
         return sum(line.quantity * line.price for line in order.order_lines) + order.delivery_fee
 
     def get_order_detail(self, order_id):
@@ -68,6 +70,7 @@ class StaffController:
         return order_detail
     
     def update_order_status(self, order_id, new_status):
+        """Update the status of an order."""
         order = self.session.query(Order).filter_by(order_id=order_id).first()
         if order:
             order.status = new_status
@@ -76,16 +79,19 @@ class StaffController:
         return False
 
     def get_customer_details(self, email):
+        """Fetch customer details based on the email address."""
         customer = self.session.query(Customer).filter_by(email=email).first()
         if customer:
             return f"Name: {customer.name}\nEmail: {customer.email}\nBalance: ${customer.balance}\nAddress: {customer.address}"
         return None
 
     def get_customer_list(self):
+        """Fetch a list of all customers in the database."""
         customers = self.session.query(Customer).all()
         return "\n".join(f"{cust.name} ({cust.email})" for cust in customers)
 
     def generate_sales_report(self, timeframe):
+        """Generate a sales report based on the specified timeframe."""
         today = datetime.today()
         start_date = today - {"Weekly Sales": timedelta(days=7), "Monthly Sales": timedelta(days=30), "Yearly Sales": timedelta(days=365)}.get(timeframe, timedelta(days=0))
         if start_date == timedelta(days=0):
@@ -95,6 +101,7 @@ class StaffController:
         return f"Total Sales: ${total_sales:.2f}"
 
     def get_popular_items(self):
+        """Fetch the most popular items based on the number of times they have been ordered."""
         popular_items = self.session.query(OrderLine.item_name, func.count(OrderLine.item_name))\
                                      .group_by(OrderLine.item_name)\
                                      .order_by(func.count(OrderLine.item_name).desc()).limit(5).all()

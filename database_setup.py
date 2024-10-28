@@ -22,7 +22,7 @@ def drop_tables():
     Base.metadata.drop_all(bind=engine)
     print("All tables dropped successfully.")
 
-# Create all tables (will create them in the connected database)
+# Create all tables
 def create_tables():
     Base.metadata.create_all(bind=engine)
 

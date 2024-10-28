@@ -115,7 +115,7 @@ class CustomerView:
             self.controller.update_vegetable_info(event, self.session, self.item_combobox, self.price_label, self.unit_label)
         elif selected_type == "Premade Box":
             # For premade box, fetch and display only price
-            price = self.get_premade_box_price(selected_item)  # Fetch box price
+            price = self.get_premade_box_price(selected_item)
             self.price_label.config(text=f"${price:.2f}")
             self.unit_label.config(text="")
 

@@ -12,13 +12,6 @@ class App:
 
         # Initialize login screen
         LoginView(self.root, self.session)
-
-
-    def get_order_ids(self):
-        """Fetch order IDs from the database for staff processing."""
-        orders = self.session.query(Order).all()
-        return [order.order_id for order in orders]
-
     
     def close(self):
         """Close the application and the session."""

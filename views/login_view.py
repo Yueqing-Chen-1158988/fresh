@@ -25,6 +25,7 @@ class LoginView:
         self.login_button.pack(pady=20)
 
     def authenticate_user(self):
+        """Authenticate the user based on the entered username and password."""
         username = self.username_entry.get()
         password = self.password_entry.get()
 
@@ -36,7 +37,8 @@ class LoginView:
         success, role, user_id = authenticate_user(self.session, username, password)
 
         if success:
-            self.login_frame.pack_forget()  # Hide login frame
+            # Hide login frame
+            self.login_frame.pack_forget() 
 
             # Create a main frame
             self.main_frame = ttk.Frame(self.root)
@@ -50,6 +52,7 @@ class LoginView:
             self.customer_tab = ttk.Frame(self.notebook)
             self.staff_tab = ttk.Frame(self.notebook)
 
+            # Display the appropriate tab based on the user role
             if role == "customer":
                 self.notebook.add(self.customer_tab, text="Customer")
                 CustomerView(self.root, self.session, user_id, self.customer_tab)
