@@ -1,7 +1,7 @@
 import tkinter as tk
 from database_setup import get_session
 from models.order import Order
-from views.login_view import LoginView
+from views.auth_view import AuthView
 class App:
     def __init__(self, root):
         self.root = root
@@ -11,7 +11,7 @@ class App:
         self.session = get_session()  # Initialize database session
 
         # Initialize login screen
-        self.root.login_view = LoginView(self.root, self.session)
+        self.root.login_view = AuthView(self.root, self.session)
     
     def close(self):
         """Close the application and the session."""

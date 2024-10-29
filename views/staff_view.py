@@ -3,11 +3,12 @@ from controllers.staff_controller import StaffController
 import tkinter as tk
 
 class StaffView:
-    def __init__(self, root, session, staff_id, staff_tab):
+    def __init__(self, root, session, staff_id, staff_tab, logout):
         self.root = root
         self.session = session
         self.staff_id = staff_id
         self.staff_tab = staff_tab
+        self.logout = logout
         self.controller = StaffController(session)
         self.init_staff_interface()
 
@@ -67,6 +68,9 @@ class StaffView:
         # Logout Button
         self.logout_button = ttk.Button(self.staff_tab, text="Logout", command=self.logout)
         self.logout_button.pack(pady=20)
+
+        # Ensure the UI refreshes
+        self.staff_tab.update_idletasks()
 
     def open_vegetable_window(self):
         """Open a new window to view all vegetables."""
@@ -439,17 +443,17 @@ class StaffView:
         close_button = ttk.Button(popular_window, text="Close", command=popular_window.destroy)
         close_button.pack(pady=10)
 
-    def logout(self):
-        """Logout the user and return to the login screen."""
-        # Destroy the main frame
-        if hasattr(self.root, 'main_frame'):
-            self.root.main_frame.destroy()
+    # def logout(self):
+    #     """Logout the user and return to the login screen."""
+    #     # Destroy the main frame
+    #     if hasattr(self.root, 'main_frame'):
+    #         self.root.main_frame.destroy()
 
-        # Show the login view and reset fields
-        if hasattr(self.root, 'login_view'):
-            self.root.login_view.reset_fields()  # Clear username and password fields
-            self.root.login_view.login_frame.pack(fill=tk.BOTH, expand=True)
-        else:
-            from views.login_view import LoginView
-            self.root.login_view = LoginView(self.root, self.session)
-            self.root.login_view.login_frame.pack(fill=tk.BOTH, expand=True)
+    #     # Show the login view and reset fields
+    #     if hasattr(self.root, 'login_view'):
+    #         self.root.login_view.reset_fields()  # Clear username and password fields
+    #         self.root.login_view.login_frame.pack(fill=tk.BOTH, expand=True)
+    #     else:
+    #         from views.auth_view import AuthView
+    #         self.root.login_view = AuthView(self.root, self.session)
+    #         self.root.login_view.login_frame.pack(fill=tk.BOTH, expand=True)

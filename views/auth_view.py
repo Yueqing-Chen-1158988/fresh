@@ -4,7 +4,7 @@ from controllers.auth_controller import authenticate_user
 from views.customer_view import CustomerView
 from views.staff_view import StaffView
 
-class LoginView:
+class AuthView:
     def __init__(self, root, session):
         self.root = root
         self.session = session
@@ -58,11 +58,11 @@ class LoginView:
             # Display the appropriate tab based on the user role
             if role == "customer":
                 self.notebook.add(self.customer_tab, text="Customer")
-                CustomerView(self.root, self.session, user_id, self.customer_tab)
+                CustomerView(self.root, self.session, user_id, self.customer_tab, self.logout)
 
             elif role == "staff":
                 self.notebook.add(self.staff_tab, text="Staff")
-                StaffView(self.root, self.session, user_id, self.staff_tab)
+                StaffView(self.root, self.session, user_id, self.staff_tab, self.logout)
         else:
             messagebox.showerror("Error", "Invalid username or password.")
 
@@ -71,4 +71,18 @@ class LoginView:
         self.username_entry.delete(0, tk.END)
         self.password_entry.delete(0, tk.END)
 
-        
+    def logout(self):
+        """Logout the user and return to the login screen."""
+        # Destroy the main frame and show the login frame
+        if hasattr(self.root, 'main_frame'):
+            self.root.main_frame.destroy()
+
+        if hasattr(self.root, 'login_view'):
+            self.root.login_view.reset_fields()  # Clear username and password fields
+            self.root.login_view.login_frame.pack(fill=tk.BOTH, expand=True)
+        else:
+            self.root.login_view = AuthView(self.root, self.session)
+            self.root.login_view.login_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Force an update to ensure the login frame is immediately displayed
+        self.root.update_idletasks()

@@ -4,11 +4,12 @@ from views.order_view import OrderView
 from controllers.customer_controller import CustomerController
 
 class CustomerView:
-    def __init__(self, root, session, customer_id, customer_tab):
+    def __init__(self, root, session, customer_id, customer_tab, logout):
         self.root = root
         self.session = session
         self.customer_id = customer_id
         self.customer_tab = customer_tab
+        self.logout = logout
         self.controller = CustomerController(session)
         self.cart = []
         self.init_customer_interface()
@@ -99,6 +100,9 @@ class CustomerView:
         # Logout Button
         self.logout_button = ttk.Button(self.customer_tab, text="Logout", command=self.logout)
         self.logout_button.pack(side=tk.LEFT, padx=10)
+
+        # Ensure the UI refreshes
+        self.customer_tab.update_idletasks()
 
     def update_type_selection(self, event):
         """Update item options based on selected type."""
@@ -192,17 +196,3 @@ class CustomerView:
         
         total_cost = float(self.total_cost_label.cget("text").strip("$"))
         self.controller.make_payment(self.session, self.order_id, payment_type, total_cost)
-
-    def logout(self):
-        """Logout the user and return to the login screen."""
-        # Destroy the main frame and show the login frame
-        if hasattr(self.root, 'main_frame'):
-            self.root.main_frame.destroy()
-
-        if hasattr(self.root, 'login_view'):
-            self.root.login_view.reset_fields()  # Clear username and password fields
-            self.root.login_view.login_frame.pack(fill=tk.BOTH, expand=True)
-        else:
-            from views.login_view import LoginView # Import here to avoid circular import
-            self.root.login_view = LoginView(self.root, self.session)
-            self.root.login_view.login_frame.pack(fill=tk.BOTH, expand=True)
