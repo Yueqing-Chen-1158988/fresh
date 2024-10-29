@@ -16,7 +16,7 @@ class StaffView:
         ttk.Label(self.staff_tab, text="Staff Dashboard", font=("Arial", 18, "bold")).pack(pady=(10, 20))
 
         # Frame for Viewing Items
-        item_frame = ttk.LabelFrame(self.staff_tab, text="View Items", padding=(10, 10))
+        item_frame = ttk.LabelFrame(self.staff_tab, text="Items", padding=(10, 10))
         item_frame.pack(pady=10, fill="x")
 
         self.view_vegetables_button = ttk.Button(item_frame, text="View All Vegetables", command=self.open_vegetable_window)
@@ -26,7 +26,7 @@ class StaffView:
         self.view_boxes_button.pack(side=tk.LEFT, padx=10)
 
         # Frame for Viewing Orders
-        order_frame = ttk.LabelFrame(self.staff_tab, text="View Orders", padding=(10, 10))
+        order_frame = ttk.LabelFrame(self.staff_tab, text="Orders", padding=(10, 10))
         order_frame.pack(pady=10, fill="x")
 
         self.order_type_combobox = ttk.Combobox(order_frame, values=["Current Orders", "Previous Orders"], state="readonly")
@@ -36,16 +36,13 @@ class StaffView:
         self.view_orders_button = ttk.Button(order_frame, text="View All Orders", command=self.open_orders_window)
         self.view_orders_button.pack(side=tk.LEFT, padx=10)
 
-        # Frame for Customer Lookup
-        lookup_frame = ttk.LabelFrame(self.staff_tab, text="Customer Lookup", padding=(10, 10))
-        lookup_frame.pack(pady=10, fill="x")
+        # Frame for Viewing Customers
+        customer_frame = ttk.LabelFrame(self.staff_tab, text="Customers", padding=(10, 10))
+        customer_frame.pack(pady=10, fill="x")
 
-        ttk.Label(lookup_frame, text="Enter Customer Email:").pack(pady=5)
-        self.customer_search_entry = ttk.Entry(lookup_frame)
-        self.customer_search_entry.pack(pady=5)
-
-        self.search_customer_button = ttk.Button(lookup_frame, text="Search Customer", command=self.view_customer_details)
-        self.search_customer_button.pack(pady=10)
+        # Button to View All Customers
+        self.view_all_customers_button = ttk.Button(customer_frame, text="View Customers and Details", command=self.view_all_customers)
+        self.view_all_customers_button.pack(side=tk.LEFT, padx=10)
 
         # Frame for Generating Reports
         report_frame = ttk.LabelFrame(self.staff_tab, text="Generate Reports", padding=(10, 10))
@@ -331,17 +328,56 @@ class StaffView:
         else:
             messagebox.showerror("Error", "Order details not found.")
 
-    def view_customer_details(self):
-        """View customer details based on email."""
-        customer_email = self.customer_search_entry.get().strip()
-        if not customer_email:
-            messagebox.showwarning("Warning", "Please enter a customer email.")
-            return
-        details = self.controller.get_customer_details(customer_email)
-        if details:
-            messagebox.showinfo("Customer Details", details)
-        else:
-            messagebox.showerror("Error", "Customer not found.")
+    def view_all_customers(self):
+        """Open a new window to display all customers with a search box."""
+        customer_window = Toplevel(self.root)
+        customer_window.title("Customer List")
+        customer_window.geometry("600x400")
+
+        # Search by Name Frame
+        search_frame = ttk.Frame(customer_window)
+        search_frame.pack(fill="x", padx=10, pady=5)
+
+        ttk.Label(search_frame, text="Search by Name:").pack(side="left")
+        self.customer_search_name_entry = ttk.Entry(search_frame)
+        self.customer_search_name_entry.pack(side="left", padx=5)
+        search_button = ttk.Button(search_frame, text="Search", command=lambda: self.filter_customers(customer_tree))
+        search_button.pack(side="left", padx=5)
+
+        # Treeview for Displaying Customer List
+        columns = ("Customer ID", "Name", "Username", "Email", "Balance", "Credit Limit")
+        customer_tree = ttk.Treeview(customer_window, columns=columns, show="headings")
+        customer_tree.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Define column headings
+        for col in columns:
+            customer_tree.heading(col, text=col)
+            customer_tree.column(col, anchor="w", width=100)
+
+        # Insert customer data
+        customers = self.controller.get_all_customers()
+        for customer in customers:
+            # Display the credit limit if it exists, otherwise "N/A"
+            credit_limit = getattr(customer, 'credit_limit', "N/A")
+            customer_tree.insert("", "end", values=(
+                customer.customer_id, customer.name, customer.username,
+                customer.email, customer.balance, credit_limit
+            ))
+
+        # Store Treeview for filtering
+        self.customer_tree = customer_tree
+
+    def filter_customers(self, customer_tree):
+        """Filter customers by name based on search input."""
+        search_name = self.customer_search_name_entry.get().strip().lower()
+        for item in customer_tree.get_children():
+            customer_tree.delete(item)
+
+        # Re-populate Treeview with filtered customers
+        filtered_customers = self.controller.get_customers_by_name(search_name)
+        for customer in filtered_customers:
+            credit_limit = customer.credit_limit if hasattr(customer, 'credit_limit') else "N/A"
+            customer_tree.insert("", "end", values=(customer.customer_id, customer.name, customer.username, customer.email, customer.balance, credit_limit))
 
     def generate_report(self):
         """Generate a sales report based on the selected type."""

@@ -150,7 +150,7 @@ class CustomerView:
         """Update the delivery fee based on the selected option."""
         self.delivery_option = self.delivery_combobox.get()
         if self.delivery_option == "Delivery":
-            self.delivery_fee_label.config(text="$10.00")  # Set your delivery fee here
+            self.delivery_fee_label.config(text="$10.00") 
             self.delivery_fee = 10.0
         else:
             self.delivery_fee_label.config(text="$0.00")
@@ -159,7 +159,6 @@ class CustomerView:
 
     def get_premade_box_price(self, box_name):
         """Placeholder function to get premade box price."""
-        # Replace with actual price fetching logic
         box_prices = {"Small Box": 10.0, "Medium Box": 15.0, "Large Box": 20.0}
         return box_prices.get(box_name, 0.0)
 

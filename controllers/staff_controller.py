@@ -1,7 +1,7 @@
 from models.vegetable_premadeBox import Vegetable, PremadeBox
 from models.order import Order
 from models.order_line import OrderLine
-from models.customer import Customer
+from models.customer import CorporateCustomer, Customer
 from datetime import datetime, timedelta
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
@@ -78,18 +78,23 @@ class StaffController:
             return True
         return False
 
-    def get_customer_details(self, email):
-        """Fetch customer details based on the email address."""
-        customer = self.session.query(Customer).filter_by(email=email).first()
-        if customer:
-            return f"Name: {customer.name}\nEmail: {customer.email}\nBalance: ${customer.balance}\nAddress: {customer.address}"
-        return None
+    def get_all_customers(self):
+        """Retrieve all customers from the database."""
+        # Retrieve regular customers
+        regular_customers = self.session.query(Customer).filter(~Customer.customer_id.in_(
+            self.session.query(CorporateCustomer.customer_id)
+        )).all()
+    
+        # Retrieve corporate customers
+        corporate_customers = self.session.query(CorporateCustomer).all()
 
-    def get_customer_list(self):
-        """Fetch a list of all customers in the database."""
-        customers = self.session.query(Customer).all()
-        return "\n".join(f"{cust.name} ({cust.email})" for cust in customers)
+        # Combine lists, corporate customers have credit_limit while regular ones do not
+        return regular_customers + corporate_customers
 
+    def get_customers_by_name(self, name):
+        """Retrieve customers whose names match the search input."""
+        return self.session.query(Customer).filter(Customer.name.ilike(f"%{name}%")).all()
+    
     def generate_sales_report(self, timeframe):
         """Generate a sales report based on the specified timeframe."""
         today = datetime.today()
