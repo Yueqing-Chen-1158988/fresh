@@ -45,22 +45,24 @@ class StaffView:
         self.view_all_customers_button.pack(side=tk.LEFT, padx=10)
 
         # Frame for Generating Reports
-        report_frame = ttk.LabelFrame(self.staff_tab, text="Generate Reports", padding=(10, 10))
+        report_frame = ttk.LabelFrame(self.staff_tab, text="Generate Sales Report", padding=(10, 10))
         report_frame.pack(pady=10, fill="x")
 
-        self.report_type_combobox = ttk.Combobox(report_frame, values=["Sales Report", "Customer List", "Popularity Report"], state="readonly")
-        self.report_type_combobox.set("Select Report Type")
-        self.report_type_combobox.pack(pady=5)
-
-        self.generate_report_button = ttk.Button(report_frame, text="Generate Report", command=self.generate_report)
-        self.generate_report_button.pack(pady=10)
-
+        # Dropdown for selecting the timeframe
+        ttk.Label(report_frame, text="Select Timeframe:").grid(row=0, column=0, padx=5, pady=5)
+        self.timeframe_combo = ttk.Combobox(report_frame, values=["Week", "Month", "Year"], state="readonly")
+        self.timeframe_combo.grid(row=0, column=1, padx=5, pady=5)
+        
+        # Button to generate the report
+        self.generate_report_button = ttk.Button(report_frame, text="Generate Report", command=self.generate_sales_report)
+        self.generate_report_button.grid(row=0, column=2, padx=5, pady=5)
+    
         # Frame for Viewing Popular Items
         popular_items_frame = ttk.LabelFrame(self.staff_tab, text="Most Popular Items", padding=(10, 10))
         popular_items_frame.pack(pady=10, fill="x")
 
-        self.view_popular_items_button = ttk.Button(popular_items_frame, text="View Most Popular Items", command=self.view_popular_items)
-        self.view_popular_items_button.pack(pady=10)
+        self.view_popular_items_button = ttk.Button(popular_items_frame, text="View Most Popular Items", command=self.show_popular_items)
+        self.view_popular_items_button.pack(side=tk.LEFT, padx=10)
 
     # --- Functions for Opening New Windows ---
     def open_vegetable_window(self):
@@ -314,19 +316,19 @@ class StaffView:
         else:
             messagebox.showerror("Error", "Order ID not found or cannot be canceled.")
 
-    def view_order_details(self, order_tree):
-        """View detailed information for a selected order."""
-        selected_item = order_tree.selection()
-        if not selected_item:
-            messagebox.showwarning("Warning", "Please select an order to view details.")
-            return
+    # def view_order_details(self, order_tree):
+    #     """View detailed information for a selected order."""
+    #     selected_item = order_tree.selection()
+    #     if not selected_item:
+    #         messagebox.showwarning("Warning", "Please select an order to view details.")
+    #         return
         
-        order_id = order_tree.item(selected_item)["values"][0]
-        details = self.controller.get_order_detail(order_id)
-        if details:
-            messagebox.showinfo("Order Details", details)
-        else:
-            messagebox.showerror("Error", "Order details not found.")
+    #     order_id = order_tree.item(selected_item)["values"][0]
+    #     details = self.controller.get_order_detail(order_id)
+    #     if details:
+    #         messagebox.showinfo("Order Details", details)
+    #     else:
+    #         messagebox.showerror("Error", "Order details not found.")
 
     def view_all_customers(self):
         """Open a new window to display all customers with a search box."""
@@ -367,6 +369,10 @@ class StaffView:
         # Store Treeview for filtering
         self.customer_tree = customer_tree
 
+        # Add a close button
+        close_button = ttk.Button(customer_window, text="Close", command=customer_window.destroy)
+        close_button.pack(pady=10)
+
     def filter_customers(self, customer_tree):
         """Filter customers by name based on search input."""
         search_name = self.customer_search_name_entry.get().strip().lower()
@@ -379,19 +385,68 @@ class StaffView:
             credit_limit = customer.credit_limit if hasattr(customer, 'credit_limit') else "N/A"
             customer_tree.insert("", "end", values=(customer.customer_id, customer.name, customer.username, customer.email, customer.balance, credit_limit))
 
-    def generate_report(self):
-        """Generate a sales report based on the selected type."""
-        report_type = self.report_type_combobox.get()
-        if report_type == "Select Report Type":
-            messagebox.showwarning("Warning", "Please select a report type.")
+    def generate_sales_report(self):
+        """Handler for the 'Generate Report' button."""
+        timeframe = self.timeframe_combo.get()
+        if not timeframe:
+            messagebox.showwarning("Warning", "Please select a timeframe.")
             return
-        report_data = self.controller.generate_sales_report(report_type)
-        messagebox.showinfo("Report", report_data)
-
-    def view_popular_items(self):
-        """View the most popular items based on sales."""
-        popular_items = self.controller.get_popular_items()
-        if popular_items:
-            messagebox.showinfo("Most Popular Items", popular_items)
+        
+        # Call the controller to get sales data
+        sales_data = self.controller.generate_sales_report(timeframe)
+        if sales_data:
+            self.show_sales_report_popup(sales_data)
         else:
-            messagebox.showerror("Error", "No popular items found.")
+            messagebox.showinfo("Info", "No sales data available for the selected timeframe.")
+
+    def show_sales_report_popup(self, sales_data):
+        """Display the sales report in a popup data table."""
+        report_window = Toplevel(self.root)
+        report_window.title("Sales Report")
+        report_window.geometry("500x300")
+        
+        # Treeview for displaying sales data
+        report_tree = ttk.Treeview(report_window, columns=("Date", "Total Sales"), show="headings")
+        report_tree.heading("Date", text="Date")
+        report_tree.heading("Total Sales", text="Total Sales")
+        report_tree.column("Date", anchor="w", width=150)
+        report_tree.column("Total Sales", anchor="w", width=150)
+        report_tree.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # Insert sales data
+        for row in sales_data:
+            report_tree.insert("", "end", values=row)
+
+        # Add a close button
+        close_button = ttk.Button(report_window, text="Close", command=report_window.destroy)
+        close_button.pack(pady=10)
+
+    def show_popular_items(self):
+        """Display the most popular items in a new window."""
+        # Retrieve the popular items data
+        popular_items_data = self.controller.get_popular_items()
+
+        # Create a new pop-up window
+        popular_window = tk.Toplevel(self.root)
+        popular_window.title("Most Popular Items")
+        popular_window.geometry("300x300")
+        popular_window.grab_set()
+
+        # Create a Treeview to display popular items
+        columns = ("Item Name", "Order Count")
+        popular_items_tree = ttk.Treeview(pop_up, columns=columns, show="headings")
+        popular_items_tree.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Define the headings
+        popular_items_tree.heading("Item Name", text="Item Name", anchor="w")
+        popular_items_tree.column("Item Name", width=80)
+        popular_items_tree.heading("Order Count", text="Order Count", anchor="w")
+        popular_items_tree.column("Order Count", width=40)
+
+        # Insert popular items data into the Treeview
+        for item, count in popular_items_data:
+            popular_items_tree.insert("", "end", values=(item, count))
+
+        # Add a close button
+        close_button = ttk.Button(popular_window, text="Close", command=popular_window.destroy)
+        close_button.pack(pady=10)

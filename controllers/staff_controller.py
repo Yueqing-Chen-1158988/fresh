@@ -96,18 +96,40 @@ class StaffController:
         return self.session.query(Customer).filter(Customer.name.ilike(f"%{name}%")).all()
     
     def generate_sales_report(self, timeframe):
-        """Generate a sales report based on the specified timeframe."""
-        today = datetime.today()
-        start_date = today - {"Weekly Sales": timedelta(days=7), "Monthly Sales": timedelta(days=30), "Yearly Sales": timedelta(days=365)}.get(timeframe, timedelta(days=0))
-        if start_date == timedelta(days=0):
-            return None
-        sales = self.session.query(Order).filter(Order.order_date >= start_date).all()
-        total_sales = sum(self.get_order_total(order) for order in sales)
-        return f"Total Sales: ${total_sales:.2f}"
+        """Generate sales report data for the specified timeframe."""
+        now = datetime.now()
+        
+        # Determine the start date based on the selected timeframe
+        if timeframe == "Week":
+            start_date = now - timedelta(days=7)
+        elif timeframe == "Month":
+            start_date = now.replace(day=1)
+        elif timeframe == "Year":
+            start_date = now.replace(month=1, day=1)
+        else:
+            return []
 
+        # Query to calculate daily total sales
+        daily_sales_data = self.session.query(
+            func.date(Order.order_date).label("order_date"),
+            (func.sum(OrderLine.quantity * OrderLine.price) + func.sum(Order.delivery_fee)).label("total_sales")
+        ).join(OrderLine).filter(Order.order_date >= start_date) \
+         .group_by(func.date(Order.order_date)).all()
+        
+        # Convert daily results to list of tuples for display
+        daily_sales = [(str(order_date), round(total_sales, 2)) for order_date, total_sales in daily_sales_data]
+        
+        # Calculate total sales for the entire timeframe
+        total_sales_in_timeframe = sum(total for _, total in daily_sales)
+
+        # Append the total sales row
+        daily_sales.append(("Total Sales", round(total_sales_in_timeframe, 2)))
+
+        return daily_sales
+    
     def get_popular_items(self):
         """Fetch the most popular items based on the number of times they have been ordered."""
         popular_items = self.session.query(OrderLine.item_name, func.count(OrderLine.item_name))\
-                                     .group_by(OrderLine.item_name)\
-                                     .order_by(func.count(OrderLine.item_name).desc()).limit(5).all()
-        return "Most Popular Items:\n" + "\n".join(f"{item} - Ordered {count} times" for item, count in popular_items)
+                                    .group_by(OrderLine.item_name)\
+                                    .order_by(func.count(OrderLine.item_name).desc()).limit(5).all()
+        return [(item, count) for item, count in popular_items]
