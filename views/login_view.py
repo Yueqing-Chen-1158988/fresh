@@ -37,18 +37,21 @@ class LoginView:
         success, role, user_id = authenticate_user(self.session, username, password)
 
         if success:
-            # Hide login frame
-            self.login_frame.pack_forget() 
+            # Remove any existing main frame to avoid layering issues
+            if hasattr(self.root, 'main_frame'):
+                self.root.main_frame.destroy()
 
-            # Create a main frame
+            self.login_frame.pack_forget()
+
             self.main_frame = ttk.Frame(self.root)
             self.main_frame.pack(fill=tk.BOTH, expand=True)
+            self.root.main_frame = self.main_frame  # Store main_frame in root for easy access
 
-            # Create a notebook (tabbed interface)
+            # Create a notebook to display different tabs
             self.notebook = ttk.Notebook(self.main_frame)
             self.notebook.pack(fill=tk.BOTH, expand=True)
 
-            # Create tabs
+            # Create tabs for customer and staff views
             self.customer_tab = ttk.Frame(self.notebook)
             self.staff_tab = ttk.Frame(self.notebook)
 
@@ -62,3 +65,10 @@ class LoginView:
                 StaffView(self.root, self.session, user_id, self.staff_tab)
         else:
             messagebox.showerror("Error", "Invalid username or password.")
+
+    def reset_fields(self):
+        """Clear the username and password fields."""
+        self.username_entry.delete(0, tk.END)
+        self.password_entry.delete(0, tk.END)
+
+        

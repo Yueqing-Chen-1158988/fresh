@@ -11,7 +11,7 @@ class App:
         self.session = get_session()  # Initialize database session
 
         # Initialize login screen
-        LoginView(self.root, self.session)
+        self.root.login_view = LoginView(self.root, self.session)
     
     def close(self):
         """Close the application and the session."""

@@ -64,7 +64,10 @@ class StaffView:
         self.view_popular_items_button = ttk.Button(popular_items_frame, text="View Most Popular Items", command=self.show_popular_items)
         self.view_popular_items_button.pack(side=tk.LEFT, padx=10)
 
-    # --- Functions for Opening New Windows ---
+        # Logout Button
+        self.logout_button = ttk.Button(self.staff_tab, text="Logout", command=self.logout)
+        self.logout_button.pack(pady=20)
+
     def open_vegetable_window(self):
         """Open a new window to view all vegetables."""
         vegetable_window = Toplevel(self.root)
@@ -147,7 +150,6 @@ class StaffView:
         self.cancel_order_button = ttk.Button(button_frame, text="Cancel Order", command=lambda: self.cancel_order(order_tree))
         self.cancel_order_button.pack(side=tk.LEFT, padx=10)
 
-    # --- Functions Calling StaffController ---
     def view_all_vegetables(self, treeview):
         """Fetch and display all vegetables in the Treeview."""
         vegetables = self.controller.get_all_vegetables()
@@ -316,20 +318,6 @@ class StaffView:
         else:
             messagebox.showerror("Error", "Order ID not found or cannot be canceled.")
 
-    # def view_order_details(self, order_tree):
-    #     """View detailed information for a selected order."""
-    #     selected_item = order_tree.selection()
-    #     if not selected_item:
-    #         messagebox.showwarning("Warning", "Please select an order to view details.")
-    #         return
-        
-    #     order_id = order_tree.item(selected_item)["values"][0]
-    #     details = self.controller.get_order_detail(order_id)
-    #     if details:
-    #         messagebox.showinfo("Order Details", details)
-    #     else:
-    #         messagebox.showerror("Error", "Order details not found.")
-
     def view_all_customers(self):
         """Open a new window to display all customers with a search box."""
         customer_window = Toplevel(self.root)
@@ -450,3 +438,18 @@ class StaffView:
         # Add a close button
         close_button = ttk.Button(popular_window, text="Close", command=popular_window.destroy)
         close_button.pack(pady=10)
+
+    def logout(self):
+        """Logout the user and return to the login screen."""
+        # Destroy the main frame
+        if hasattr(self.root, 'main_frame'):
+            self.root.main_frame.destroy()
+
+        # Show the login view and reset fields
+        if hasattr(self.root, 'login_view'):
+            self.root.login_view.reset_fields()  # Clear username and password fields
+            self.root.login_view.login_frame.pack(fill=tk.BOTH, expand=True)
+        else:
+            from views.login_view import LoginView
+            self.root.login_view = LoginView(self.root, self.session)
+            self.root.login_view.login_frame.pack(fill=tk.BOTH, expand=True)
