@@ -180,7 +180,7 @@ class StaffView:
 
         # Insert each order into the treeview
         for order in orders:
-            customer_name = order.customer.name if order.customer else "Unknown"  # Safely get the customer name
+            customer_name = order.customer.name if order.customer else "Unknown" 
             treeview.insert("", "end", values=(order.order_id, customer_name, order.status))
 
     def on_order_details(self, order_tree):
@@ -434,7 +434,7 @@ class StaffView:
 
         # Create a Treeview to display popular items
         columns = ("Item Name", "Order Count")
-        popular_items_tree = ttk.Treeview(pop_up, columns=columns, show="headings")
+        popular_items_tree = ttk.Treeview(popular_window, columns=columns, show="headings")
         popular_items_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
         # Define the headings
