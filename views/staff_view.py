@@ -443,17 +443,3 @@ class StaffView:
         close_button = ttk.Button(popular_window, text="Close", command=popular_window.destroy)
         close_button.pack(pady=10)
 
-    # def logout(self):
-    #     """Logout the user and return to the login screen."""
-    #     # Destroy the main frame
-    #     if hasattr(self.root, 'main_frame'):
-    #         self.root.main_frame.destroy()
-
-    #     # Show the login view and reset fields
-    #     if hasattr(self.root, 'login_view'):
-    #         self.root.login_view.reset_fields()  # Clear username and password fields
-    #         self.root.login_view.login_frame.pack(fill=tk.BOTH, expand=True)
-    #     else:
-    #         from views.auth_view import AuthView
-    #         self.root.login_view = AuthView(self.root, self.session)
-    #         self.root.login_view.login_frame.pack(fill=tk.BOTH, expand=True)
