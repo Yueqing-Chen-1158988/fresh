@@ -26,23 +26,48 @@ class CustomerController:
         
         if vegetable:
             price_label.config(text=f"${vegetable.price_per_unit:.2f}")
-            unit_label.config(text=vegetable.unit)  # Assuming you have a unit attribute in your Vegetable model
+            unit_label.config(text=vegetable.unit)
         else:
             price_label.config(text="")
             unit_label.config(text="")
 
     def add_item_to_cart(self, cart, item_type, item_name, quantity, price_per_unit):
-        """Add an item (vegetable or premade box) to the cart with subtotal."""
+        """Add an item to the cart with subtotal after validation."""
+        # Validate inputs
+        if not item_type or not item_name or not quantity or not price_per_unit:
+            messagebox.showerror("Error", "Please select an item type, item, and enter a quantity.")
+            return None
+
+        try:
+            quantity = int(quantity)
+            if quantity <= 0:
+                raise ValueError("Quantity must be positive")
+        except ValueError:
+            messagebox.showerror("Error", "Quantity must be a positive integer.")
+            return None
+
+        try:
+            price = float(price_per_unit)
+            if price <= 0:
+                raise ValueError("Price must be positive")
+        except ValueError:
+            messagebox.showerror("Error", "Invalid price value.")
+            return None
+
+        # Calculate subtotal and create cart item
+        subtotal = quantity * price
         cart_item = {
             "type": item_type,
             "name": item_name,
-            "quantity": int(quantity),
-            "price": float(price_per_unit),
-            "subtotal": int(quantity) * float(price_per_unit)
+            "quantity": quantity,
+            "price": price,
+            "subtotal": subtotal
         }
-        cart.append(cart_item)
-        return cart
 
+        # Add to cart and return updated item
+        cart.append(cart_item)
+        return cart_item
+    
     def calculate_cart_totals(self, cart):
         """Calculate and return the total cost of items in the cart."""
         total_cost = sum(item["subtotal"] for item in cart)
@@ -62,7 +87,7 @@ class CustomerController:
             # Create a new order
             new_order = Order(customer_id=customer_id, delivery_option=delivery_option, delivery_fee=delivery_fee)
             session.add(new_order)
-            session.commit()  # Commit to get the new order ID
+            session.commit()
 
             # Create order lines for each item in the cart
             for item in cart:
@@ -103,10 +128,9 @@ class CustomerController:
         if order and order.status == "Processing":
             order.status = "Cancelled"
             session.commit()
-            return True  # Indicate that the cancellation was successful
+            return True
         else:
-            return False  # Indicate that the order could not be cancelled
-
+            return False
     def view_order_history(self, session, customer_id):
         """Retrieve and display the order history for a customer."""
         order_data = self.load_order_history(session, customer_id)

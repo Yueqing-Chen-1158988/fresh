@@ -127,17 +127,21 @@ class CustomerView:
             self.unit_label.config(text="")
 
     def add_to_cart(self):
-        """Add selected item to the cart and update cart details."""
+        """Handler to add selected item to the cart and update cart details."""
         item_type = self.type_combobox.get()
         item_name = self.item_combobox.get()
-        quantity = int(self.quantity_entry.get())
-        price = float(self.price_label.cget("text").strip("$"))
-        subtotal = quantity * price
-        self.cart.append({"type": item_type, "name": item_name, "quantity": quantity, "price": price, "subtotal": subtotal})
+        quantity = self.quantity_entry.get()
+        price_per_unit = self.price_label.cget("text").strip("$")
 
-        # Update cart display
-        self.cart_listbox.insert(tk.END, f"{item_name} - {quantity} x ${price:.2f} = ${subtotal:.2f}")
-        self.update_total_cost()
+        # Call controller to add item to cart
+        cart_item = self.controller.add_item_to_cart(self.cart, item_type, item_name, quantity, price_per_unit)
+        if cart_item:
+            # Update cart display if item was successfully added
+            self.cart_listbox.insert(
+                tk.END, 
+                f"{cart_item['name']} - {cart_item['quantity']} x ${cart_item['price']:.2f} = ${cart_item['subtotal']:.2f}"
+            )
+            self.update_total_cost()
 
     def update_total_cost(self):
         """Calculate and display the total cost of items in the cart."""
