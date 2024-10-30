@@ -8,7 +8,7 @@ class OrderLine(Base):
     line_id = Column(Integer, primary_key=True, autoincrement=True)
     order_id = Column(Integer, ForeignKey('orders.order_id'), nullable=False)
     item_type = Column(Enum('Vegetable', 'Premade Box', name='item_type_enum'), nullable=False)
-    item_name = Column(String(50), nullable=False)  # This can represent either a vegetable or a premade box
+    item_name = Column(String(100), nullable=False)  # This can represent either a vegetable or a premade box
     quantity = Column(Integer, nullable=False)
     price = Column(Float, nullable=False)
     

@@ -22,4 +22,4 @@ class Payment(Base):
         self.amount = amount
     
     def __str__(self):
-        return f"Payment(Order: {self.order_id}, Type: {self.payment_type}, Amount: {self.amount})"
+        return f"Payment(Order: {self.order_id}, Type: {self.payment_type}, Status: {self.payment_status}, Amount: {self.amount})"
