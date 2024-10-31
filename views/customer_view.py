@@ -107,6 +107,9 @@ class CustomerView:
     def update_type_selection(self, event):
         """Update item options based on selected type."""
         selected_type = self.type_combobox.get()
+        self.item_combobox.set("")  
+        self.price_label.config(text="")
+        
         if selected_type == "Vegetable":
             self.item_combobox.config(values=self.controller.get_vegetable_names(self.session))
             self.unit_label.config(text="")  # Clear unit display for non-vegetable selections
