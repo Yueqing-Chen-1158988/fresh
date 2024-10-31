@@ -298,7 +298,7 @@ class StaffView:
         success = self.controller.update_order_status(order_id, new_status)
         if success:
             messagebox.showinfo("Success", "Order status updated.")
-            update_window.destroy()  # Close the update status window
+            update_window.destroy()
 
             # Refresh the displayed orders in the main order window
             self.view_orders(order_tree)
@@ -316,7 +316,7 @@ class StaffView:
         success = self.controller.cancel_order(order_id)
         if success:
             messagebox.showinfo("Success", "Order canceled successfully.")
-            self.view_all_orders(order_tree)  # Refresh the order list
+            self.view_all_orders(order_tree) 
         else:
             messagebox.showerror("Error", "Order ID not found or cannot be canceled.")
 
