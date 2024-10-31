@@ -398,11 +398,11 @@ class StaffView:
         report_window.geometry("500x300")
         
         # Treeview for displaying sales data
-        report_tree = ttk.Treeview(report_window, columns=("Date", "Total Sales"), show="headings")
+        report_tree = ttk.Treeview(report_window, columns=("Date", "Subtotal"), show="headings")
         report_tree.heading("Date", text="Date")
-        report_tree.heading("Total Sales", text="Total Sales")
+        report_tree.heading("Subtotal", text="Subtotal")
         report_tree.column("Date", anchor="w", width=150)
-        report_tree.column("Total Sales", anchor="w", width=150)
+        report_tree.column("Subtotal", anchor="w", width=150)
         report_tree.pack(fill="both", expand=True, padx=10, pady=10)
         
         # Insert sales data
