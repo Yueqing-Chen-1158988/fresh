@@ -52,7 +52,7 @@ def populate_data():
         Customer(name="Anna Smith", username="anna", email="anna@123.com", password="password123", balance=10.0),
         Customer(name="Mark Twain", username="mark", email="mark@123.com", password="password123", balance=15.0),
         Customer(name="Lucy Brown", username="lucy", email="lucy@123.com", password="password123", balance=20.0),
-        CorporateCustomer(name="TechCorp", username="corp", email="corp@123.com", password="password123", balance=500.0, credit_limit=1000.0, discount_rate=0.15)
+        CorporateCustomer(name="TechCorp", username="corp", email="corp@123.com", password="password123", balance=500.0, credit_limit=1000.0, discount_rate=0.1)
     ]
 
     # Add staff
