@@ -46,7 +46,7 @@ class StaffView:
         self.view_all_customers_button.pack(side=tk.LEFT, padx=10)
 
         # Frame for Generating Reports
-        report_frame = ttk.LabelFrame(self.staff_tab, text="Generate Sales Report", padding=(10, 10))
+        report_frame = ttk.LabelFrame(self.staff_tab, text="Sales Report", padding=(10, 10))
         report_frame.pack(pady=10, fill="x")
 
         # Dropdown for selecting the timeframe
@@ -59,7 +59,7 @@ class StaffView:
         self.generate_report_button.grid(row=0, column=2, padx=5, pady=5)
     
         # Frame for Viewing Popular Items
-        popular_items_frame = ttk.LabelFrame(self.staff_tab, text="Most Popular Items", padding=(10, 10))
+        popular_items_frame = ttk.LabelFrame(self.staff_tab, text="Popular Items", padding=(10, 10))
         popular_items_frame.pack(pady=10, fill="x")
 
         self.view_popular_items_button = ttk.Button(popular_items_frame, text="View Most Popular Items", command=self.show_popular_items)

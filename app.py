@@ -1,6 +1,5 @@
 import tkinter as tk
 from database_setup import get_session
-from models.order import Order
 from views.auth_view import AuthView
 class App:
     def __init__(self, root):
