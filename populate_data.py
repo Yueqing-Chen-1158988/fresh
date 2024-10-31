@@ -1,9 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from database_setup import get_session
-from models.base import Base
 from models.customer import Customer, CorporateCustomer
 from models.staff import Staff
-from models.vegetable_premadeBox import Vegetable, PremadeBox 
+from models.vegetable_premadeBox import Vegetable, PremadeBox
 from models.order import Order
 from models.order_line import OrderLine
 from models.payment import Payment
@@ -19,7 +18,7 @@ def clear_data(session):
     session.query(PremadeBox).delete()
     session.commit()
     print("Existing data cleared successfully.")
-    
+
 def populate_data():
     session = get_session()
     
@@ -47,14 +46,12 @@ def populate_data():
         PremadeBox(size="Large Box", price=20.0)
     ]
 
-   # Add customers
+    # Add customers
     customers = [
         Customer(name="Jo Ann", username="ann", email="jo@123.com", password="password123", balance=0.0),
-        Customer(name="Anna Smith", username="anna", email="anna@123.com", password="password123", balance=10.0)
-    ]
-
-    # Add some corporate customers
-    corporate_customers = [
+        Customer(name="Anna Smith", username="anna", email="anna@123.com", password="password123", balance=10.0),
+        Customer(name="Mark Twain", username="mark", email="mark@123.com", password="password123", balance=15.0),
+        Customer(name="Lucy Brown", username="lucy", email="lucy@123.com", password="password123", balance=20.0),
         CorporateCustomer(name="TechCorp", username="corp", email="corp@123.com", password="password123", balance=500.0, credit_limit=1000.0, discount_rate=0.15)
     ]
 
@@ -65,56 +62,106 @@ def populate_data():
     ]
 
     # Add all data
-    session.add_all(vegetables + premade_boxes + customers + corporate_customers + staff_members)
+    session.add_all(vegetables + premade_boxes + customers + staff_members)
     session.commit()
 
-    # Retrieve customer and product for order creation
-    jo_ann = session.query(Customer).filter_by(name="Jo Ann").first()
-    carrot = session.query(Vegetable).filter_by(name="Carrot").first()
-    small_box = session.query(PremadeBox).filter_by(size="Small Box").first()
+    # Specific orders for each customer
+    order_details = [
+        {
+            "customer": "Jo Ann",
+            "items": [("Vegetable", "Carrot", 3), ("Premade Box", "Small Box", 1)],
+            "delivery_option": "Collect",
+            "payment_type": "credit_card",
+            "order_date": datetime(2024, 10, 24, 9, 10),
+            "status": "Cancelled"
+        },
+        {
+            "customer": "Anna Smith",
+            "items": [("Vegetable", "Potato", 5), ("Vegetable", "Onion", 2)],
+            "delivery_option": "Delivery",
+            "payment_type": "debit_card",
+            "order_date": datetime(2024, 10, 25, 14, 30),
+            "status": "Completed"
+        },
+        {
+            "customer": "Mark Twain",
+            "items": [("Vegetable", "Broccoli", 1), ("Premade Box", "Medium Box", 1)],
+            "delivery_option": "Collect",
+            "payment_type": "account",
+            "order_date": datetime(2024, 10, 26, 11, 45),
+            "status": "Completed"
+        },
+        {
+            "customer": "Lucy Brown",
+            "items": [("Vegetable", "Lettuce", 2), ("Vegetable", "Spinach", 3)],
+            "delivery_option": "Delivery",
+            "payment_type": "credit_card",
+            "order_date": datetime(2024, 10, 27, 16, 50),
+            "status": "Processing"
+        },
+        {
+            "customer": "TechCorp",
+            "items": [("Vegetable", "Bell Pepper", 4), ("Premade Box", "Large Box", 2)],
+            "delivery_option": "Delivery",
+            "payment_type": "account",
+            "order_date": datetime(2024, 10, 28, 13, 20),
+            "status": "Processing"
+        },
+    ]
 
-    # Create an order for Jo
-    order_jo = Order(
-        customer_id=jo_ann.customer_id, 
-        order_date=datetime(2024, 10, 24, 9, 10),
-        delivery_option="Collect"
-    )
+    # Create orders based on order details
+    for details in order_details:
+        # Retrieve customer
+        customer = session.query(Customer).filter_by(name=details["customer"]).first()
+        # Calculate delivery fee based on the delivery option
+        delivery_fee = 10.0 if details["delivery_option"] == "Delivery" else 0.0
+        
+        # Create the order with the calculated delivery fee
+        order = Order(
+            customer_id=customer.customer_id,
+            order_date=details["order_date"],
+            delivery_option=details["delivery_option"],
+            delivery_fee=delivery_fee,
+            status=details["status"]
+        )
+        session.add(order)
+        session.commit()  # Commit here to get the order ID for the order lines
 
-    # Add the order
-    session.add(order_jo)
-    session.commit()
+        # Add order lines
+        total_amount = 0.0
+        for item_type, item_name, quantity in details["items"]:
+            if item_type == "Vegetable":
+                item = session.query(Vegetable).filter_by(name=item_name).first()
+                price = item.price_per_unit * quantity
+            else:  # Premade Box
+                item = session.query(PremadeBox).filter_by(size=item_name).first()
+                price = item.price * quantity
 
-    # Add order lines for the order
-    order_line_1 = OrderLine(
-        order_id=order_jo.order_id, 
-        item_type="Vegetable",
-        item_name=carrot.name,
-        quantity=2,
-        price=carrot.price_per_unit * 2
-    )
-    order_line_2 = OrderLine(
-        order_id=order_jo.order_id, 
-        item_type="Premade Box",
-        item_name=small_box.size,
-        quantity=1,
-        price=small_box.price
-    )
+            order_line = OrderLine(
+                order_id=order.order_id,
+                item_type=item_type,
+                item_name=item_name,
+                quantity=quantity,
+                price=price
+            )
+            total_amount += price
+            session.add(order_line)
 
-    # Create a payment for Jo Ann's order
-    payment_jo = Payment(
-        order_id=order_jo.order_id,
-        payment_type="credit_card", 
-        payment_status="completed",
-        amount=order_line_1.price + order_line_2.price 
-    )
+        # Add the delivery fee to the total amount
+        total_amount += delivery_fee
 
-    # Add the order and its components to the session
-    session.add(order_jo)
-    session.add(order_line_1)
-    session.add(order_line_2)
-    session.add(payment_jo)
+        # Create payment for the order
+        payment = Payment(
+            order_id=order.order_id,
+            payment_type="credit_card",
+            payment_status="completed",
+            amount=total_amount
+        )
+        session.add(payment)
+        session.commit()
 
-    # Commit the transaction
+
+    # Commit all changes
     session.commit()
     session.close()
     print("Data populated successfully.")
