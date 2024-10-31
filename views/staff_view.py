@@ -49,14 +49,12 @@ class StaffView:
         report_frame = ttk.LabelFrame(self.staff_tab, text="Sales Report", padding=(10, 10))
         report_frame.pack(pady=10, fill="x")
 
-        # Dropdown for selecting the timeframe
-        ttk.Label(report_frame, text="Select Timeframe:").grid(row=0, column=0, padx=5, pady=5)
         self.timeframe_combo = ttk.Combobox(report_frame, values=["Week", "Month", "Year"], state="readonly")
-        self.timeframe_combo.grid(row=0, column=1, padx=5, pady=5)
-        
-        # Button to generate the report
+        self.timeframe_combo.set("Select Timeframe")
+        self.timeframe_combo.pack(side=tk.LEFT, padx=10)
+
         self.generate_report_button = ttk.Button(report_frame, text="Generate Report", command=self.generate_sales_report)
-        self.generate_report_button.grid(row=0, column=2, padx=5, pady=5)
+        self.generate_report_button.pack(side=tk.LEFT, padx=10)
     
         # Frame for Viewing Popular Items
         popular_items_frame = ttk.LabelFrame(self.staff_tab, text="Popular Items", padding=(10, 10))
