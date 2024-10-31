@@ -26,21 +26,28 @@ def populate_data():
     # Clear existing data
     clear_data(session)
 
-    # Add some initial vegetables
+    # Add vegetables
     vegetables = [
         Vegetable(name="Carrot", price_per_unit=0.5, unit="kg"),
         Vegetable(name="Potato", price_per_unit=0.3, unit="kg"),
-        Vegetable(name="Tomato", price_per_unit=1.0, unit="pack")
+        Vegetable(name="Tomato", price_per_unit=1.0, unit="pack"),
+        Vegetable(name="Cucumber", price_per_unit=0.4, unit="kg"),
+        Vegetable(name="Lettuce", price_per_unit=0.6, unit="head"),
+        Vegetable(name="Broccoli", price_per_unit=1.2, unit="head"),
+        Vegetable(name="Bell Pepper", price_per_unit=0.8, unit="kg"),
+        Vegetable(name="Spinach", price_per_unit=0.9, unit="pack"),
+        Vegetable(name="Onion", price_per_unit=0.5, unit="kg"),
+        Vegetable(name="Garlic", price_per_unit=0.2, unit="pack"),
     ]
 
-    # Add some initial premade boxes
+    # Add premade boxes
     premade_boxes = [
         PremadeBox(size="Small Box", price=10.0),
         PremadeBox(size="Medium Box", price=15.0),
         PremadeBox(size="Large Box", price=20.0)
     ]
 
-   # Add some regular customers
+   # Add customers
     customers = [
         Customer(name="Jo Ann", username="ann", email="jo@123.com", password="password123", balance=0.0),
         Customer(name="Anna Smith", username="anna", email="anna@123.com", password="password123", balance=10.0)
@@ -51,19 +58,17 @@ def populate_data():
         CorporateCustomer(name="TechCorp", username="corp", email="corp@123.com", password="password123", balance=500.0, credit_limit=1000.0, discount_rate=0.15)
     ]
 
-    # Add some staff members
+    # Add staff
     staff_members = [
         Staff(name="Ella Young", email="ella@123.com", username="ella", password="password123"),
         Staff(name="Dan Brown", email="dan@123.com", username="dan", password="password123")
     ]
 
-    # Add all data to the session
+    # Add all data
     session.add_all(vegetables + premade_boxes + customers + corporate_customers + staff_members)
-
-    # Commit initial data
     session.commit()
 
-    # Retrieve some customer and product records for order creation
+    # Retrieve customer and product for order creation
     jo_ann = session.query(Customer).filter_by(name="Jo Ann").first()
     carrot = session.query(Vegetable).filter_by(name="Carrot").first()
     small_box = session.query(PremadeBox).filter_by(size="Small Box").first()
@@ -75,36 +80,36 @@ def populate_data():
         delivery_option="Collect"
     )
 
-    # Add the order to the session and commit to get the order_id
+    # Add the order
     session.add(order_jo)
-    session.commit()  # Commit to generate order_id
+    session.commit()
 
-    # Add order lines for the order (one for a vegetable, one for a premade box)
+    # Add order lines for the order
     order_line_1 = OrderLine(
-        order_id=order_jo.order_id,  # This will be set after the order is added to the session
-        item_type="Vegetable",  # Use the enum type defined in the model
-        item_name=carrot.name,  # Use the name from the Vegetable model
+        order_id=order_jo.order_id, 
+        item_type="Vegetable",
+        item_name=carrot.name,
         quantity=2,
-        price=carrot.price_per_unit * 2  # Assuming price is calculated based on quantity
+        price=carrot.price_per_unit * 2
     )
     order_line_2 = OrderLine(
-        order_id=order_jo.order_id,  # This will be set after the order is added to the session
-        item_type="Premade Box",  # Use the enum type defined in the model
-        item_name=small_box.size,  # Use the size as the item name
+        order_id=order_jo.order_id, 
+        item_type="Premade Box",
+        item_name=small_box.size,
         quantity=1,
-        price=small_box.price  # Direct price from the PremadeBox
+        price=small_box.price
     )
 
     # Create a payment for Jo Ann's order
     payment_jo = Payment(
-        order_id=order_jo.order_id,  # This will be set after the order is added to the session
-        payment_type="credit_card",  # Use the enum type defined in the model
+        order_id=order_jo.order_id,
+        payment_type="credit_card", 
         payment_status="completed",
-        amount=order_line_1.price + order_line_2.price  # Total amount from order lines
+        amount=order_line_1.price + order_line_2.price 
     )
 
     # Add the order and its components to the session
-    session.add(order_jo)  # Add the order first
+    session.add(order_jo)
     session.add(order_line_1)
     session.add(order_line_2)
     session.add(payment_jo)

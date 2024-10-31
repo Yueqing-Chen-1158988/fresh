@@ -12,6 +12,7 @@ from models.customer import Customer
 # Fixture for setting up the database
 @pytest.fixture(scope="session", autouse=True)
 def setup_database():
+    drop_tables()
     create_tables()
     yield
     drop_tables()
