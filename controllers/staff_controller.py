@@ -13,12 +13,12 @@ class StaffController:
     def get_all_vegetables(self):
         """Fetch all vegetables from the database."""
         vegetables = self.session.query(Vegetable).all()
-        return vegetables  # Return a list of Vegetable objects
+        return vegetables 
     
     def get_all_premade_boxes(self):
         """Fetch all premade boxes from the database."""
         premade_boxes = self.session.query(PremadeBox).all()
-        return premade_boxes  # Return a list of PremadeBox objects
+        return premade_boxes
 
     def get_orders_by_type(self, order_type):
         """Fetch orders based on the order type."""
@@ -28,8 +28,8 @@ class StaffController:
             orders = self.session.query(Order).filter(Order.status != "Processing").all()
         else:
             return []  # Return an empty list if the order type is not recognized
-        return orders  # Return the list of orders
-
+        return orders 
+    
     def get_order_total(self, order):
         """Calculate the total cost of an order."""
         return sum(line.quantity * line.price for line in order.order_lines) + order.delivery_fee
@@ -47,7 +47,7 @@ class StaffController:
             "order_lines": []
         }
 
-        # Collect order line details
+        # Get order line details
         for line in order.order_lines:
             item_data = {
                 "item_type": line.item_type,
@@ -58,7 +58,7 @@ class StaffController:
             }
             
             if line.item_type == 'Vegetable':
-                # Get the unit of the vegetable (assuming price includes unit)
+                # Get the unit of the vegetable
                 vegetable = self.session.query(Vegetable).filter(Vegetable.name == line.item_name).first()
                 item_data["unit"] = vegetable.unit if vegetable else "Unknown"
             else:
@@ -109,20 +109,15 @@ class StaffController:
         else:
             return []
 
-        # Query to calculate daily total sales
+        # Calculate daily total sales
         daily_sales_data = self.session.query(
             func.date(Order.order_date).label("order_date"),
             (func.sum(OrderLine.quantity * OrderLine.price) + func.sum(Order.delivery_fee)).label("total_sales")
         ).join(OrderLine).filter(Order.order_date >= start_date) \
          .group_by(func.date(Order.order_date)).all()
         
-        # Convert daily results to list of tuples for display
         daily_sales = [(str(order_date), round(total_sales, 2)) for order_date, total_sales in daily_sales_data]
-        
-        # Calculate total sales for the entire timeframe
         total_sales_in_timeframe = sum(total for _, total in daily_sales)
-
-        # Append the total sales row
         daily_sales.append(("Total Sales", round(total_sales_in_timeframe, 2)))
 
         return daily_sales

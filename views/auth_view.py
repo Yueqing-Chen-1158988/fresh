@@ -37,7 +37,7 @@ class AuthView:
         success, role, user_id = authenticate_user(self.session, username, password)
 
         if success:
-            # Remove any existing main frame to avoid layering issues
+            # Remove any existing main frames
             if hasattr(self.root, 'main_frame'):
                 self.root.main_frame.destroy()
 
@@ -45,7 +45,7 @@ class AuthView:
 
             self.main_frame = ttk.Frame(self.root)
             self.main_frame.pack(fill=tk.BOTH, expand=True)
-            self.root.main_frame = self.main_frame  # Store main_frame in root for easy access
+            self.root.main_frame = self.main_frame
 
             # Create a notebook to display different tabs
             self.notebook = ttk.Notebook(self.main_frame)
@@ -84,5 +84,4 @@ class AuthView:
             self.root.login_view = AuthView(self.root, self.session)
             self.root.login_view.login_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Force an update to ensure the login frame is immediately displayed
         self.root.update_idletasks()

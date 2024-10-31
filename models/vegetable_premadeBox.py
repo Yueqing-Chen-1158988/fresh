@@ -10,7 +10,6 @@ class Vegetable(Base):
     price_per_unit = Column(Float, nullable=False)
     unit = Column(String(25), nullable=False)  # e.g., 'kg', 'pack', 'unit'
 
-    # Relationship to contents, linking with premade boxes
     boxes = relationship("Contents", back_populates="vegetable")
 
     def __init__(self, name, price_per_unit, unit):
@@ -29,7 +28,6 @@ class PremadeBox(Base):
     size = Column(Enum('Small Box', 'Medium Box', 'Large Box', name='box_size_enum'), nullable=False)
     price = Column(Float, nullable=False)
 
-    # Relationship to contents, establishing a link with vegetables
     contents = relationship("Contents", back_populates="box")
     
     def __init__(self, size, price):
@@ -47,7 +45,6 @@ class Contents(Base):
     vegetable_id = Column(Integer, ForeignKey('vegetables.vegetable_id'), nullable=False)
     quantity = Column(Float, nullable=False) 
     
-    # Relationships to link contents back to box and vegetable
     box = relationship("PremadeBox", back_populates="contents")
     vegetable = relationship("Vegetable", back_populates="boxes")
     

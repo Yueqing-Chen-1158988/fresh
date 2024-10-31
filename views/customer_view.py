@@ -160,7 +160,6 @@ class CustomerView:
         # Call controller to add item to cart
         cart_item = self.controller.add_item_to_cart(self.cart, item_type, item_name, quantity, price_per_unit)
         if cart_item:
-            # Update cart display if item was successfully added
             self.cart_listbox.insert(
                 tk.END, 
                 f"{cart_item['name']} - {cart_item['quantity']} x ${cart_item['price']:.2f} = ${cart_item['subtotal']:.2f}"
@@ -213,7 +212,7 @@ class CustomerView:
 
     def make_payment_handler(self):
         """Handler to initiate payment for the order."""
-        payment_type = self.payment_type_combobox.get()  # Retrieve selected payment type
+        payment_type = self.payment_type_combobox.get()
         if not payment_type:
             messagebox.showerror("Error", "Please select a payment type.")
             return

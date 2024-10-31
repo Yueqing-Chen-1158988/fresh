@@ -15,7 +15,6 @@ class OrderView:
 
     def populate_order_history(self):
         """Populate the order history Treeview with data from the database."""
-        # Clear the Treeview
         for row in self.order_history_tree.get_children():
             self.order_history_tree.delete(row)
 
@@ -46,7 +45,6 @@ class OrderView:
             return
 
         order_id = self.order_history_tree.item(selected_item)['values'][0]
-        # Add logic here to display order details
         self.view_order_detail(order_id)
 
     def view_order_detail(self, order_id):
@@ -109,7 +107,6 @@ class OrderView:
 
         ttk.Label(order_history_window, text="Your Order History", font=("Arial", 16)).pack(pady=10)
 
-        # Frame to hold both the table and buttons
         content_frame = ttk.Frame(order_history_window)
         content_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -130,7 +127,6 @@ class OrderView:
         self.order_history_tree.configure(yscroll=scrollbar.set)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        # Frame for buttons at the bottom of the table
         button_frame = ttk.Frame(content_frame)
         button_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
 
@@ -171,7 +167,7 @@ class OrderView:
             }
             
             if line.item_type == 'Vegetable':
-                # Get the unit of the vegetable (assuming price includes unit)
+                # Get the unit of the vegetable
                 vegetable = self.session.query(Vegetable).filter(Vegetable.name == line.item_name).first()
                 item_data["unit"] = vegetable.unit if vegetable else "Unknown"
             else:

@@ -107,7 +107,7 @@ class CustomerController:
 
             session.commit()
             messagebox.showinfo("Success", "Order has been successfully placed.")
-            return new_order.order_id  # Return the order ID for reference
+            return new_order.order_id
         except Exception as e:
             session.rollback()
             messagebox.showerror("Error", f"An error occurred: {e}")
@@ -140,7 +140,7 @@ class CustomerController:
         """Retrieve and display the order history for a customer."""
         order_data = self.load_order_history(session, customer_id)
         
-        # Display the order history in a readable format
+        # Display the order history
         if order_data:
             history_text = "Order History:\n\n"
             for order_id, order_date, total_cost, status in order_data:

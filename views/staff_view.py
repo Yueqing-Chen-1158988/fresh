@@ -119,7 +119,6 @@ class StaffView:
 
         ttk.Label(orders_window, text="Order History", font=("Arial", 16)).pack(pady=10)
 
-        # Frame to hold both the table and buttons
         content_frame = ttk.Frame(orders_window)
         content_frame.pack(fill=tk.BOTH, expand=True)
 
