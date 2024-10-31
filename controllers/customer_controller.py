@@ -31,6 +31,11 @@ class CustomerController:
             price_label.config(text="")
             unit_label.config(text="")
 
+    def get_box_contents(self, session, box_size):
+        """Retrieve contents of the specified box size."""
+        premade_box = session.query(PremadeBox).filter_by(size=box_size).first()
+        return premade_box.contents if premade_box else []
+    
     def add_item_to_cart(self, cart, item_type, item_name, quantity, price_per_unit):
         """Add an item to the cart with subtotal after validation."""
         # Validate inputs

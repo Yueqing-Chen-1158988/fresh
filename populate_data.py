@@ -1,8 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from database_setup import get_session
 from models.customer import Customer, CorporateCustomer
 from models.staff import Staff
-from models.vegetable_premadeBox import Vegetable, PremadeBox
+from models.vegetable_premadeBox import Contents, Vegetable, PremadeBox
 from models.order import Order
 from models.order_line import OrderLine
 from models.payment import Payment
@@ -45,6 +45,39 @@ def populate_data():
         PremadeBox(size="Medium Box", price=15.0),
         PremadeBox(size="Large Box", price=20.0)
     ]
+    session.add_all(vegetables + premade_boxes)
+    session.commit()
+    
+    # Adding contents to premade boxes
+    contents = [
+        Contents(box_id=premade_boxes[0].box_id, vegetable_id=vegetables[0].vegetable_id, quantity=1),
+        Contents(box_id=premade_boxes[0].box_id, vegetable_id=vegetables[1].vegetable_id, quantity=2),
+        Contents(box_id=premade_boxes[0].box_id, vegetable_id=vegetables[2].vegetable_id, quantity=1),
+        Contents(box_id=premade_boxes[0].box_id, vegetable_id=vegetables[3].vegetable_id, quantity=2),
+        Contents(box_id=premade_boxes[0].box_id, vegetable_id=vegetables[4].vegetable_id, quantity=3),
+        Contents(box_id=premade_boxes[1].box_id, vegetable_id=vegetables[0].vegetable_id, quantity=2),
+        Contents(box_id=premade_boxes[1].box_id, vegetable_id=vegetables[5].vegetable_id, quantity=1),
+        Contents(box_id=premade_boxes[1].box_id, vegetable_id=vegetables[1].vegetable_id, quantity=2),
+        Contents(box_id=premade_boxes[1].box_id, vegetable_id=vegetables[2].vegetable_id, quantity=1),
+        Contents(box_id=premade_boxes[1].box_id, vegetable_id=vegetables[3].vegetable_id, quantity=2),
+        Contents(box_id=premade_boxes[1].box_id, vegetable_id=vegetables[4].vegetable_id, quantity=3),
+        Contents(box_id=premade_boxes[1].box_id, vegetable_id=vegetables[6].vegetable_id, quantity=1),
+        Contents(box_id=premade_boxes[1].box_id, vegetable_id=vegetables[7].vegetable_id, quantity=2),
+        Contents(box_id=premade_boxes[2].box_id, vegetable_id=vegetables[5].vegetable_id, quantity=1),
+        Contents(box_id=premade_boxes[2].box_id, vegetable_id=vegetables[6].vegetable_id, quantity=2),
+        Contents(box_id=premade_boxes[2].box_id, vegetable_id=vegetables[7].vegetable_id, quantity=3),
+        Contents(box_id=premade_boxes[2].box_id, vegetable_id=vegetables[0].vegetable_id, quantity=2),
+        Contents(box_id=premade_boxes[2].box_id, vegetable_id=vegetables[1].vegetable_id, quantity=2),
+        Contents(box_id=premade_boxes[2].box_id, vegetable_id=vegetables[2].vegetable_id, quantity=2),
+        Contents(box_id=premade_boxes[2].box_id, vegetable_id=vegetables[3].vegetable_id, quantity=2),
+        Contents(box_id=premade_boxes[2].box_id, vegetable_id=vegetables[4].vegetable_id, quantity=3),
+        Contents(box_id=premade_boxes[2].box_id, vegetable_id=vegetables[8].vegetable_id, quantity=2),
+        Contents(box_id=premade_boxes[2].box_id, vegetable_id=vegetables[9].vegetable_id, quantity=2),
+        # add more items for each box
+    ]
+
+    session.add_all(contents)
+    session.commit()
 
     # Add customers
     customers = [

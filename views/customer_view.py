@@ -1,4 +1,4 @@
-from tkinter import messagebox, ttk
+from tkinter import Toplevel, messagebox, ttk
 import tkinter as tk
 from views.order_view import OrderView
 from controllers.customer_controller import CustomerController
@@ -109,13 +109,13 @@ class CustomerView:
         selected_type = self.type_combobox.get()
         self.item_combobox.set("")  
         self.price_label.config(text="")
-        
+
         if selected_type == "Vegetable":
             self.item_combobox.config(values=self.controller.get_vegetable_names(self.session))
-            self.unit_label.config(text="")  # Clear unit display for non-vegetable selections
+            self.unit_label.config(text="") 
         elif selected_type == "Premade Box":
             self.item_combobox.config(values=self.controller.get_premade_box_sizes(self.session))
-            self.unit_label.config(text="N/A")  # Hide unit label for premade boxes
+            self.unit_label.config(text="N/A")
 
     def update_item_details(self, event):
         """Update price and unit labels based on selected item."""
@@ -129,6 +129,27 @@ class CustomerView:
             self.price_label.config(text=f"${price:.2f}")
             self.unit_label.config(text="")
 
+            self.show_box_contents_popup(selected_item)
+
+    def show_box_contents_popup(self, box_size):
+        """Show a pop-up displaying the contents of a selected box."""
+        # Fetch the contents from the controller
+        contents = self.controller.get_box_contents(self.session, box_size)
+        
+        # Create a new pop-up window
+        popup = Toplevel()
+        popup.title(f"Contents of {box_size}")
+        popup.geometry("300x300")
+
+        ttk.Label(popup, text=f"{box_size} Contents", font=("Arial", 14, "bold")).pack(pady=5)
+
+        # Display each item in the box
+        for content in contents:
+            item_text = f"{content.vegetable.name} - {content.quantity} {content.vegetable.unit}"
+            ttk.Label(popup, text=item_text).pack()
+
+        tk.Button(popup, text="Close", command=popup.destroy).pack(pady=10)
+        
     def add_to_cart(self):
         """Handler to add selected item to the cart and update cart details."""
         item_type = self.type_combobox.get()
