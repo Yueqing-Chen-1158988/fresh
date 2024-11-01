@@ -1,6 +1,7 @@
 import pytest
 from models.staff import Staff
 
+@pytest.fixture
 def test_staff_init():
     staff = Staff("Emma Blank", "emma@123.com", "emma", "password")
     assert staff.name == "Emma Blank"

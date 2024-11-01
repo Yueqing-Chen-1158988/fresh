@@ -1,6 +1,7 @@
 import pytest
 from models.vegetable_premadeBox import Vegetable, PremadeBox
 
+@pytest.fixture
 def test_vegetable_init():
     vegetable = Vegetable('Carrot', 1.99, 'kg')
     assert vegetable.name == 'Carrot'

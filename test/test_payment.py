@@ -1,6 +1,7 @@
 import pytest
 from models.payment import Payment
 
+@pytest.fixture
 def test_payment_init():
     payment = Payment(order_id=1, payment_type='credit_card', payment_status='pending', amount=100.0)
     assert payment.order_id == 1

@@ -1,6 +1,7 @@
 import pytest
 from models.customer import Customer, CorporateCustomer
 
+@pytest.fixture
 def test_customer_init():
     customer = Customer("John Smith", "john", "john@123.com", "password")
     assert customer.name == "John Smith"
